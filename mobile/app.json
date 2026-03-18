@@ -3,26 +3,58 @@
     "name": "Political Soch",
     "slug": "political-soch",
     "version": "1.0.0",
+    "description": "Political Soch is a field survey platform for secure data collection, media verification, GPS capture, and admin monitoring.",
+    "scheme": "politicalsoch",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "primaryColor": "#123a35",
     "assetBundlePatterns": ["**/*"],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.politicalsoch.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Political Soch uses the camera to capture survey photos for verification.",
+        "NSLocationWhenInUseUsageDescription": "Political Soch uses your location to attach GPS coordinates to survey submissions.",
+        "NSMicrophoneUsageDescription": "Political Soch uses the microphone to record survey voice notes for verification."
+      }
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#0d2623"
-      },
+      "package": "com.politicalsoch.app",
+      "versionCode": 1,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "RECORD_AUDIO"
-      ]
+      ],
+      "blockedPermissions": [],
+      "adaptiveIcon": {
+        "backgroundColor": "#0d2623"
+      },
+      "softwareKeyboardLayoutMode": "pan"
     },
     "plugins": [
-      "expo-location",
-      "expo-image-picker"
-    ]
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Political Soch to capture GPS coordinates for survey verification."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Political Soch to take photos for survey evidence.",
+          "microphonePermission": "Allow Political Soch to record voice notes for survey evidence."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "political-soch-local"
+      }
+    }
   }
 }
-

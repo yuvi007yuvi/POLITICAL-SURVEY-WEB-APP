@@ -8,6 +8,14 @@ export const projectService = {
   create: async (payload) => {
     const { data } = await api.post("/projects", payload);
     return data.data;
+  },
+  update: async (id, payload) => {
+    const { data } = await api.put(`/projects/${id}`, payload);
+    return data.data;
+  },
+  delete: async (id) => {
+    const { data } = await api.delete(`/projects/${id}`);
+    return data.data;
   }
 };
 

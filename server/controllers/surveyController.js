@@ -4,6 +4,7 @@ import { Survey } from "../models/Survey.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { buildPagination } from "../utils/pagination.js";
+import { getSurveyFilter } from "../middleware/auth.js";
 
 const uploadSurveyMedia = async (files) => {
   const photoUploads = files.photos || [];
@@ -56,7 +57,7 @@ export const submitSurvey = asyncHandler(async (req, res) => {
   }
 
   if (
-    req.user.role !== "admin" &&
+    !["super_admin", "admin"].includes(req.user.role?.key) &&
     !req.user.assignedProjects.some(
       (assignedProjectId) => assignedProjectId.toString() === req.body.projectId
     )
@@ -85,7 +86,7 @@ export const submitSurvey = asyncHandler(async (req, res) => {
 
 export const getSurveyReports = asyncHandler(async (req, res) => {
   const { page, limit, skip } = buildPagination(req.query);
-  const filter = {};
+  const filter = { ...getSurveyFilter(req.user) };
 
   if (req.query.projectId) {
     filter.projectId = req.query.projectId;

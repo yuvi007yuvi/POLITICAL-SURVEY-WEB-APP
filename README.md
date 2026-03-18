@@ -121,7 +121,8 @@ Political Soch is a free-tier survey platform architecture for field operations,
 ### Expo
 
 1. Run the mobile app in Expo Go for testing.
-2. For production APK/AAB later, use EAS build only when needed.
+2. For production APK/AAB, use EAS build from `mobile/`.
+3. See `mobile/BUILD_ANDROID.md` for the Android release flow.
 
 ## Free Cost Optimization Strategy
 

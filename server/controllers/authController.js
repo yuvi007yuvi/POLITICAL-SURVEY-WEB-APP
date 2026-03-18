@@ -22,16 +22,17 @@ export const register = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create(req.body);
+  const populated = await User.findById(user._id).populate("role");
 
   res.status(201).json({
     success: true,
     message: "User registered successfully",
-    data: buildAuthPayload(user)
+    data: buildAuthPayload(populated)
   });
 });
 
 export const login = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
+  const user = await User.findOne({ email: req.body.email }).populate("role");
 
   if (!user || !(await user.comparePassword(req.body.password))) {
     throw new ApiError(401, "Invalid credentials");

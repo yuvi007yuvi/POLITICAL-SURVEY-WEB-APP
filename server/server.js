@@ -9,10 +9,12 @@ import authRoutes from "./routes/authRoutes.js";
 import coreRoutes from "./routes/coreRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
+import roleRoutes from "./routes/roleRoutes.js";
 import surveyRoutes from "./routes/surveyRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { connectDatabase } from "./config/db.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import seedRolesAndAdmin from "./utils/seed.js";
 
 dotenv.config();
 
@@ -48,6 +50,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/surveys", surveyRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/dashboardStats", dashboardRoutes);
+app.use("/api/roles", roleRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -55,7 +58,8 @@ app.use(errorHandler);
 const port = process.env.PORT || 5000;
 
 connectDatabase()
-  .then(() => {
+  .then(async () => {
+    await seedRolesAndAdmin();
     app.listen(port, () => {
       console.log(`Server listening on port ${port}`);
     });

@@ -21,9 +21,9 @@ const userSchema = new mongoose.Schema(
       minlength: 6
     },
     role: {
-      type: String,
-      enum: ["admin", "survey_user"],
-      default: "survey_user"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+      required: true
     },
     assignedProjects: [
       {

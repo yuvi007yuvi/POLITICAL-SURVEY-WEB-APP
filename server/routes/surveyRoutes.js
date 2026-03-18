@@ -1,9 +1,9 @@
 import express from "express";
+import { authorize, protect } from "../middleware/auth.js";
 import {
   getSurveyReports,
   submitSurvey
 } from "../controllers/surveyController.js";
-import { authorize, protect } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
@@ -19,7 +19,6 @@ router.post(
   submitSurvey
 );
 
-router.get("/surveyReports", authorize("admin"), getSurveyReports);
+router.get("/surveyReports", authorize("super_admin", "admin", "regional_admin"), getSurveyReports);
 
 export default router;
-

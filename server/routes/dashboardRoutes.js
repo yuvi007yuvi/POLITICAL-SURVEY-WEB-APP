@@ -4,7 +4,7 @@ import { authorize, protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.use(protect, authorize("admin"));
+router.use(protect);
 router.get("/", getDashboardStats);
 
 export default router;
