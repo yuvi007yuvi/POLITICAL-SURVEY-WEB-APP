@@ -63,6 +63,20 @@ export const DashboardLayout = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 border-r border-slate-100 pr-4">
+                <div className="flex h-8 w-8 items-center justify-center bg-slate-950 text-white text-[10px] font-black overflow-hidden shadow-lg border-2 border-brand-500/20">
+                  {session?.user?.profilePhoto ? (
+                    <img src={session.user.profilePhoto} alt="User" className="h-full w-full object-cover" />
+                  ) : (
+                    session?.user?.name?.charAt(0) || "U"
+                  )}
+                </div>
+                <div className="hidden lg:block text-left">
+                   <p className="text-[10px] font-black text-slate-900 uppercase tracking-tighter leading-none">{session?.user?.name}</p>
+                   <p className="text-[8px] font-bold text-brand-600 uppercase tracking-widest mt-0.5">{session?.user?.role?.name || "Admin"}</p>
+                </div>
+              </div>
+
               <button
                 onClick={logout}
                 className="group flex items-center gap-2.5 rounded-none px-3 py-2 text-xs font-semibold text-surface-500 hover:bg-rose-50 hover:text-rose-600 transition-all duration-200"

@@ -69,8 +69,12 @@ export const Sidebar = () => {
       <div className="mt-auto space-y-4">
         <div className="rounded-none bg-slate-50 p-4 border border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-none bg-brand-600 text-[10px] font-bold text-white shadow-inner">
-              {session?.user?.name?.charAt(0) || "A"}
+            <div className="flex h-8 w-8 items-center justify-center rounded-none bg-brand-600 text-[10px] font-bold text-white shadow-inner overflow-hidden border border-brand-500/20">
+              {session?.user?.profilePhoto ? (
+                <img src={session.user.profilePhoto} alt={session.user.name} className="h-full w-full object-cover" />
+              ) : (
+                session?.user?.name?.charAt(0) || "A"
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[11px] font-bold text-surface-800">{session?.user?.name}</p>
