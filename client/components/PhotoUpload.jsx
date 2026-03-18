@@ -1,6 +1,6 @@
 import { Camera, Upload, X } from "lucide-react";
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/api";
 import { toast } from "react-hot-toast";
 
 export const PhotoUpload = ({ userId, currentPhoto, onUploadSuccess }) => {
@@ -11,7 +11,7 @@ export const PhotoUpload = ({ userId, currentPhoto, onUploadSuccess }) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Preview
+        // Preview local
         const reader = new FileReader();
         reader.onloadend = () => setPreview(reader.result);
         reader.readAsDataURL(file);
@@ -22,11 +22,9 @@ export const PhotoUpload = ({ userId, currentPhoto, onUploadSuccess }) => {
 
         try {
             setUploading(true);
-            const token = localStorage.getItem("token");
-            const res = await axios.post(`/api/uploads/profile-photo/${userId}`, formData, {
+            const res = await api.post(`/uploads/profile-photo/${userId}`, formData, {
                 headers: {
-                    "Content-Type": "multipart/form-data",
-                    Authorization: `Bearer ${token}`
+                    "Content-Type": "multipart/form-data"
                 }
             });
 
