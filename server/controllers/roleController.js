@@ -1,4 +1,5 @@
 import { Role } from "../models/Role.js";
+import { User } from "../models/User.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
@@ -7,6 +8,18 @@ export const getRoles = asyncHandler(async (req, res) => {
     res.json({
         success: true,
         data: roles
+    });
+});
+
+export const getRoleById = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const role = await Role.findById(id);
+    if (!role) {
+        throw new ApiError(404, "Role not found");
+    }
+    res.json({
+        success: true,
+        data: role
     });
 });
 

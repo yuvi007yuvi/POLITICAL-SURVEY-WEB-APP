@@ -6,7 +6,14 @@ import { DataTable } from "../components/DataTable.jsx";
 import { projectService } from "../services/projectService.js";
 import { userService } from "../services/userService.js";
 
-const emptyField = { fieldId: "", label: "", type: "text", required: false, options: [] };
+const METRIC_TEMPLATES = [
+  { label: "Short Text", type: "text" },
+  { label: "Paragraph", type: "textarea" },
+  { label: "Dropdown", type: "select", options: [{ label: "Opt 1", value: "1" }] },
+  { label: "Single Choice", type: "radio", options: [{ label: "Yes", value: "yes" }, { label: "No", value: "no" }] },
+  { label: "Number", type: "number" },
+  { label: "Date", type: "date" },
+];
 
 export const ProjectsPage = () => {
   const queryClient = useQueryClient();
@@ -18,7 +25,7 @@ export const ProjectsPage = () => {
     code: "",
     description: "",
     status: "draft",
-    formDefinition: [{ ...emptyField, fieldId: `field_${Date.now()}` }],
+    formDefinition: [],
     assignedUsers: []
   });
 
@@ -40,6 +47,11 @@ export const ProjectsPage = () => {
       if (newProject?._id) {
         navigate(`/projects/${newProject._id}/admin`);
       }
+    },
+    onError: (error) => {
+      const serverMessage = error.response?.data?.message;
+      const clientMessage = error.message;
+      alert(`Initialization Failure: ${serverMessage || clientMessage || "No diagnostic data provided by system."}`);
     }
   });
 
@@ -48,6 +60,11 @@ export const ProjectsPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       resetForm();
+    },
+    onError: (error) => {
+      const serverMessage = error.response?.data?.message;
+      const clientMessage = error.message;
+      alert(`Sync Failure: ${serverMessage || clientMessage || "Configuration update rejected by server."}`);
     }
   });
 
@@ -64,11 +81,22 @@ export const ProjectsPage = () => {
       code: "",
       description: "",
       status: "draft",
-      formDefinition: [{ ...emptyField, fieldId: `field_${Date.now()}` }],
+      formDefinition: [],
       assignedUsers: []
     });
     setEditingId(null);
     setStep(1);
+  };
+
+  const addMetric = (template) => {
+    const newField = {
+      fieldId: `metric_${form.formDefinition.length + 1}_${Math.random().toString(36).substr(2, 4)}`,
+      label: template.label === "Short Text" ? "" : template.label,
+      type: template.type,
+      required: false,
+      options: template.options || []
+    };
+    setForm(f => ({ ...f, formDefinition: [...f.formDefinition, newField] }));
   };
 
   const handleEdit = (project) => {
@@ -242,42 +270,65 @@ export const ProjectsPage = () => {
 
             {step === 3 && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 mb-2 text-center md:text-left">
                   <div>
-                    <h4 className="text-sm font-bold text-surface-800 uppercase tracking-widest">Intelligence Schema</h4>
-                    <p className="text-[11px] font-medium text-surface-400 mt-1">Define data acquisition nodes</p>
+                    <h4 className="text-sm font-bold text-surface-800 uppercase tracking-widest">Rapid Metric Deployment</h4>
+                    <p className="text-[11px] font-medium text-surface-400 mt-1">Select templates to instantly build your survey schema</p>
                   </div>
-                  <button className="button-secondary h-9 px-4 text-[10px] font-bold uppercase tracking-widest" type="button" onClick={() => setForm(f => ({ ...f, formDefinition: [...f.formDefinition, { ...emptyField, fieldId: `field_${Date.now()}` }] }))}>
-                    <Plus size={14} className="mr-1.5" /> Append Metric
-                  </button>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    {METRIC_TEMPLATES.map(tmp => (
+                      <button
+                        key={tmp.label}
+                        type="button"
+                        onClick={() => addMetric(tmp)}
+                        className="h-8 px-3 text-[9px] font-bold border border-surface-100 bg-white hover:border-brand-500 hover:text-brand-600 transition-all uppercase tracking-widest shadow-sm flex items-center gap-2"
+                      >
+                        <Plus size={12} /> {tmp.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {form.formDefinition.map((field, index) => (
-                    <div key={field.fieldId} className="p-5 rounded-none border border-surface-100 bg-surface-50/30 space-y-4 hover:border-brand-200 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-none bg-brand-50 text-brand-600 shadow-inner">
-                            <Layers3 size={14} />
-                          </div>
-                          <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Metric Entry #{index + 1}</span>
+                    <div key={field.fieldId} className="flex flex-col md:flex-row gap-4 p-5 rounded-none border border-surface-100 bg-white hover:border-brand-200 transition-colors relative group">
+                      <div className="flex md:flex-col items-center justify-between md:justify-center border-r border-surface-50 pr-4 md:w-12">
+                        <span className="text-lg font-black text-surface-200 group-hover:text-brand-500 transition-colors">{String(index + 1).padStart(2, '0')}</span>
+                      </div>
+
+                      <div className="grid flex-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Label</label>
+                          <input className="input h-9 text-xs" placeholder="e.g. Respondent Age" value={field.label} onChange={e => updateField(index, "label", e.target.value)} />
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setForm(f => ({ ...f, formDefinition: f.formDefinition.filter((_, i) => i !== index) }))}
-                          className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest"
-                        >
-                          Remove
-                        </button>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Class</label>
+                          <select className="input h-9 text-xs appearance-none" value={field.type} onChange={e => updateField(index, "type", e.target.value)}>
+                            {["text", "number", "select", "date", "checkbox", "radio", "textarea"].map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Identifier</label>
+                          <input className="input h-9 text-[10px] bg-surface-50/50 font-mono" value={field.fieldId} onChange={e => updateField(index, "fieldId", e.target.value)} />
+                        </div>
+                        <div className={`space-y-1 transition-opacity duration-300 ${["select", "radio", "checkbox"].includes(field.type) ? "opacity-100" : "opacity-30"}`}>
+                          <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Define Choices (Comma Separated)</label>
+                          <input
+                            className="input h-9 text-xs"
+                            placeholder="e.g. Option 1, Option 2"
+                            value={field.options?.map(o => o.label).join(", ") || ""}
+                            onChange={e => updateField(index, "options", e.target.value.split(",").map(o => ({ label: o.trim(), value: o.trim() })))}
+                          />
+                        </div>
                       </div>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <input className="input h-9 text-xs" placeholder="Field Identifier" value={field.fieldId} onChange={e => updateField(index, "fieldId", e.target.value)} />
-                        <input className="input h-9 text-xs" placeholder="Visual Label" value={field.label} onChange={e => updateField(index, "label", e.target.value)} />
-                        <select className="input h-9 text-xs appearance-none" value={field.type} onChange={e => updateField(index, "type", e.target.value)}>
-                          {["text", "number", "select", "date", "checkbox", "radio", "textarea"].map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
-                        </select>
-                        <input className="input h-9 text-xs" placeholder="Options (CSV)" value={field.options.map(o => o.label).join(", ")} onChange={e => updateField(index, "options", e.target.value.split(",").map(o => ({ label: o.trim(), value: o.trim() })))} />
-                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, formDefinition: f.formDefinition.filter((_, i) => i !== index) }))}
+                        className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center bg-white border border-rose-100 text-rose-400 hover:bg-rose-500 hover:text-white hover:border-rose-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300"
+                      >
+                        <Plus size={12} className="rotate-45" />
+                      </button>
                     </div>
                   ))}
                 </div>

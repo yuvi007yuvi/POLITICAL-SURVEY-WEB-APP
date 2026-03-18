@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, FileText, FolderKanban, Map, Plus, ShieldCheck, Users as UsersIcon } from "lucide-react";
+import { Activity, BadgeCheck, Contact, FileText, FolderKanban, Map, Plus, ShieldCheck, Users as UsersIcon } from "lucide-react";
 import { useState } from "react";
 import { roleService } from "../services/roleService.js";
 import { userService } from "../services/userService.js";
+import { IDCardGallery } from "../components/IDCardGallery.jsx";
 import { MapTrackingPage } from "./MapTrackingPage.jsx";
 import { ProjectsPage } from "./ProjectsPage.jsx";
 import { ReportsPage } from "./ReportsPage.jsx";
@@ -18,7 +19,7 @@ const AdminOverview = ({ setActiveTab }) => {
         { id: "projects", label: "Projects", desc: "Manage surveys & questions", icon: FolderKanban, color: "from-pink-500 to-rose-600", shadow: "shadow-rose-200" },
         { id: "users", label: "Users", desc: "Manage team & staff", icon: UsersIcon, color: "from-emerald-400 to-teal-600", shadow: "shadow-emerald-200" },
         { id: "roles", label: "Permissions", icon: ShieldCheck, desc: "Manage what people can do", color: "from-indigo-400 to-violet-600", shadow: "shadow-indigo-200" },
-        { id: "tracking", label: "Live Map", icon: Map, desc: "See where people are", color: "from-sky-400 to-blue-600", shadow: "shadow-sky-200" },
+        { id: "id-cards", label: "ID Cards", desc: "Manage user credentials", icon: Contact, color: "from-amber-400 to-orange-600", shadow: "shadow-amber-200" },
     ];
 
     return (
@@ -59,7 +60,7 @@ export const AdminHubPage = () => {
         { id: "projects", label: "Projects", icon: FolderKanban, component: ProjectsPage },
         { id: "users", label: "Users", icon: UsersIcon, component: UsersPage },
         { id: "roles", label: "Permissions", icon: ShieldCheck, component: RolesPage },
-        { id: "tracking", label: "Live Map", icon: Map, component: MapTrackingPage },
+        { id: "id-cards", label: "ID Cards", icon: Contact, component: IDCardGallery },
     ];
 
     const ActiveComponent = tabs.find((t) => t.id === activeTab).component;

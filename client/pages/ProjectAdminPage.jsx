@@ -5,7 +5,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { projectService } from "../services/projectService.js";
 import { userService } from "../services/userService.js";
 
-const emptyField = { fieldId: "", label: "", type: "text", required: false, options: [] };
+const METRIC_TEMPLATES = [
+    { label: "Short Text", type: "text" },
+    { label: "Paragraph", type: "textarea" },
+    { label: "Dropdown", type: "select", options: [{ label: "Opt 1", value: "1" }] },
+    { label: "Single Choice", type: "radio", options: [{ label: "Yes", value: "yes" }, { label: "No", value: "no" }] },
+    { label: "Number", type: "number" },
+    { label: "Date", type: "date" },
+];
 
 export const ProjectAdminPage = () => {
     const { id } = useParams();
@@ -46,6 +53,17 @@ export const ProjectAdminPage = () => {
             alert("Project Protocol Synchronized Successfully.");
         }
     });
+
+    const addMetric = (template) => {
+        const newField = {
+            fieldId: `metric_${form.formDefinition.length + 1}_${Math.random().toString(36).substr(2, 4)}`,
+            label: template.label === "Short Text" ? "" : template.label,
+            type: template.type,
+            required: false,
+            options: template.options || []
+        };
+        setForm(f => ({ ...f, formDefinition: [...f.formDefinition, newField] }));
+    };
 
     const updateField = (index, key, value) => {
         setForm((current) => ({
@@ -110,40 +128,65 @@ export const ProjectAdminPage = () => {
             <div className="py-4">
                 {activeTab === "schema" && (
                     <div className="space-y-6 animate-fadeIn">
-                        <div className="flex items-center justify-between mb-4">
-                            <p className="text-[11px] font-bold text-surface-400 uppercase tracking-wider">Configure Data Acquisition Nodes</p>
-                            <button
-                                className="button-secondary h-9 px-4 text-[10px] font-bold uppercase tracking-widest"
-                                onClick={() => setForm(f => ({ ...f, formDefinition: [...f.formDefinition, { ...emptyField, fieldId: `field_${Date.now()}` }] }))}
-                            >
-                                <Plus size={14} className="mr-1.5" /> Append Metric
-                            </button>
+                        <div className="flex flex-col gap-4 mb-2">
+                            <div className="flex items-center justify-between">
+                                <p className="text-[11px] font-bold text-surface-400 uppercase tracking-widest flex items-center gap-2">
+                                    <span className="h-1 w-6 bg-brand-500" /> Rapid Metric Deployment
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {METRIC_TEMPLATES.map(tmp => (
+                                    <button
+                                        key={tmp.label}
+                                        onClick={() => addMetric(tmp)}
+                                        className="h-9 px-4 text-[10px] font-bold border border-surface-100 bg-white hover:border-brand-500 hover:text-brand-600 transition-all uppercase tracking-widest shadow-sm flex items-center gap-2"
+                                    >
+                                        <Plus size={12} /> {tmp.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        <div className="grid gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+
+                        <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                             {form.formDefinition.map((field, index) => (
-                                <div key={field.fieldId} className="panel bg-surface-50/30 border-surface-100 hover:border-brand-200 transition-colors p-6 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 flex items-center justify-center bg-brand-50 text-brand-600 border border-brand-100">
-                                                <span className="text-xs font-bold">{index + 1}</span>
-                                            </div>
-                                            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Metric Config</span>
+                                <div key={field.fieldId} className="flex flex-col md:flex-row gap-4 panel bg-white border-surface-100 hover:border-brand-200 transition-colors p-5 relative group">
+                                    <div className="flex md:flex-col items-center justify-between md:justify-center border-r border-surface-50 pr-4 md:w-16">
+                                        <span className="text-[9px] font-black text-brand-600/40 uppercase tracking-tighter">NODE</span>
+                                        <span className="text-lg font-black text-surface-300 group-hover:text-brand-500 transition-colors">{String(index + 1).padStart(2, '0')}</span>
+                                    </div>
+
+                                    <div className="grid flex-1 gap-4 md:grid-cols-2 lg:grid-cols-4 items-end">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Label</label>
+                                            <input className="input h-9 text-xs" placeholder="e.g. Respondent Age" value={field.label} onChange={e => updateField(index, "label", e.target.value)} />
                                         </div>
-                                        <button
-                                            onClick={() => setForm(f => ({ ...f, formDefinition: f.formDefinition.filter((_, i) => i !== index) }))}
-                                            className="text-[10px] font-bold text-rose-400 hover:text-rose-600 uppercase tracking-widest"
-                                        >
-                                            Decommission
-                                        </button>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Class</label>
+                                            <select className="input h-9 text-xs appearance-none" value={field.type} onChange={e => updateField(index, "type", e.target.value)}>
+                                                {["text", "number", "select", "date", "checkbox", "radio", "textarea"].map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1.5 lg:col-span-1">
+                                            <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Identifier</label>
+                                            <input className="input h-9 text-[10px] bg-surface-50/50 font-mono" placeholder="Internal ID" value={field.fieldId} onChange={e => updateField(index, "fieldId", e.target.value)} />
+                                        </div>
+                                        <div className={`space-y-1.5 transition-opacity duration-300 ${["select", "radio", "checkbox"].includes(field.type) ? "opacity-100" : "opacity-30"}`}>
+                                            <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Define Choices (Comma Separated)</label>
+                                            <input
+                                                className="input h-9 text-xs"
+                                                placeholder="e.g. Yes, No, Other"
+                                                value={field.options?.map(o => o.label).join(", ") || ""}
+                                                onChange={e => updateField(index, "options", e.target.value.split(",").map(o => ({ label: o.trim(), value: o.trim() })))}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                        <input className="input h-10 text-xs" placeholder="Field ID" value={field.fieldId} onChange={e => updateField(index, "fieldId", e.target.value)} />
-                                        <input className="input h-10 text-xs" placeholder="Label" value={field.label} onChange={e => updateField(index, "label", e.target.value)} />
-                                        <select className="input h-10 text-xs appearance-none" value={field.type} onChange={e => updateField(index, "type", e.target.value)}>
-                                            {["text", "number", "select", "date", "checkbox", "radio", "textarea"].map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
-                                        </select>
-                                        <input className="input h-10 text-xs" placeholder="Options (CSV)" value={field.options?.map(o => o.label).join(", ") || ""} onChange={e => updateField(index, "options", e.target.value.split(",").map(o => ({ label: o.trim(), value: o.trim() })))} />
-                                    </div>
+
+                                    <button
+                                        onClick={() => setForm(f => ({ ...f, formDefinition: f.formDefinition.filter((_, i) => i !== index) }))}
+                                        className="absolute -top-2 -right-2 h-7 w-7 flex items-center justify-center bg-white border border-rose-100 text-rose-400 hover:bg-rose-500 hover:text-white hover:border-rose-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300"
+                                    >
+                                        <Plus size={14} className="rotate-45" />
+                                    </button>
                                 </div>
                             ))}
                         </div>

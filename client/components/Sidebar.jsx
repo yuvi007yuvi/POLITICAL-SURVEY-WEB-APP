@@ -1,4 +1,4 @@
-import { BarChart3, FolderKanban, Map, ScrollText, ShieldCheck } from "lucide-react";
+import { BarChart3, BarChart4, FolderKanban, Map, ScrollText, ShieldCheck } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
 
@@ -6,6 +6,8 @@ const baseLinks = [
   { to: "/", label: "Dashboard", icon: BarChart3, color: "text-teal-600 bg-teal-50" },
   { to: "/admin", label: "Administration", icon: ShieldCheck, color: "text-indigo-600 bg-indigo-50", permission: "manage_roles" },
   { to: "/reports", label: "Reports", icon: ScrollText, color: "text-amber-600 bg-amber-50" },
+  { to: "/kpi-reports", label: "KPI Reports", icon: BarChart4, color: "text-rose-600 bg-rose-50" },
+  { to: "/tracking", label: "Live Map", icon: Map, color: "text-sky-600 bg-sky-50" },
 ];
 
 export const Sidebar = () => {

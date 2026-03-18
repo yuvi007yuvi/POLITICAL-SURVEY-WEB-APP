@@ -1,17 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { Camera, Download, FileSpreadsheet, FileText, Mic } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { DataTable } from "../components/DataTable.jsx";
 import { StatCard } from "../components/StatCard.jsx";
 import { reportService } from "../services/reportService.js";
 import { exportReportsToExcel, exportReportsToPdf } from "../utils/export.js";
 
 export const ReportsPage = () => {
+  const { selectedProjectId } = useOutletContext();
   const [page] = useState(1);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["reports", page],
-    queryFn: () => reportService.list({ page })
+    queryKey: ["reports", page, selectedProjectId],
+    queryFn: () => reportService.list({ page, projectId: selectedProjectId })
   });
 
   const rows = useMemo(

@@ -1,22 +1,66 @@
-import { Outlet } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { LogOut, Filter, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "../components/Sidebar.jsx";
 import { useAuth } from "../hooks/useAuth.jsx";
-import { LogOut } from "lucide-react";
+import { projectService } from "../services/projectService.js";
 
 export const DashboardLayout = () => {
   const { logout, session } = useAuth();
+  const location = useLocation();
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+
+  const { data: projects } = useQuery({
+    queryKey: ["projects"],
+    queryFn: projectService.list
+  });
+
+  const getBreadcrumb = () => {
+    const path = location.pathname;
+    if (path === "/") return "Dashboard";
+    if (path === "/admin") return "Administration";
+    if (path === "/reports") return "Reports";
+    if (path === "/kpi-reports") return "KPI Dashboard";
+    if (path === "/tracking") return "Live Map";
+    if (path.includes("/projects")) return "Project Orchestration";
+    return "Control Center";
+  };
 
   return (
-    <div className="min-h-screen bg-surface-100 p-4 lg:p-6">
-      <div className="mx-auto grid max-w-[1536px] gap-6 lg:grid-cols-[280px_1fr]">
+    <div className="min-h-screen bg-surface-100 p-4 lg:p-6 relative overflow-hidden">
+      {/* Background Watermark */}
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center opacity-[0.06] z-0">
+        <img src="/assets/logo.png" alt="Watermark" className="w-[600px]" />
+      </div>
+
+      <div className="mx-auto grid max-w-[1536px] gap-6 lg:grid-cols-[280px_1fr] relative z-10">
         <Sidebar />
         <main className="space-y-6">
           {/* Top Bar / Header */}
           <header className="flex h-16 items-center justify-between rounded-none border border-white/40 bg-white/70 px-6 py-3 shadow-sm backdrop-blur-md">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-extrabold tracking-tight text-surface-900">
-                Political <span className="text-brand-600">Soch</span>
-              </h1>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 border-r border-surface-100 pr-6 mr-2">
+                <span className="text-brand-500 font-bold text-lg leading-none">&gt;</span>
+                <span className="text-[14px] font-bold text-surface-500 uppercase tracking-widest">{getBreadcrumb()}</span>
+              </div>
+
+              {/* Global Project Selector */}
+              <div className="hidden md:flex items-center gap-3">
+                <div className="h-9 border border-surface-200 bg-white px-3 flex items-center gap-2 group focus-within:border-brand-500 transition-colors shadow-sm">
+                  <Filter size={12} className="text-surface-400 group-focus-within:text-brand-500 font-bold" />
+                  <select
+                    value={selectedProjectId}
+                    onChange={(e) => setSelectedProjectId(e.target.value)}
+                    className="bg-transparent text-[10px] font-black uppercase tracking-widest text-surface-700 outline-none cursor-pointer pr-4 border-none focus:ring-0"
+                  >
+                    <option value="">Global Overview</option>
+                    {projects?.map((p) => (
+                      <option key={p._id} value={p._id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -31,8 +75,9 @@ export const DashboardLayout = () => {
             </div>
           </header>
 
+
           <div className="animate-fadeIn">
-            <Outlet />
+            <Outlet context={{ selectedProjectId }} />
           </div>
         </main>
       </div>

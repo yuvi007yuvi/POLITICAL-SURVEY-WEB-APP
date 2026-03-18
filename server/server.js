@@ -5,11 +5,15 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import authRoutes from "./routes/authRoutes.js";
 import coreRoutes from "./routes/coreRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 import surveyRoutes from "./routes/surveyRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { connectDatabase } from "./config/db.js";
@@ -19,6 +23,8 @@ import seedRolesAndAdmin from "./utils/seed.js";
 dotenv.config();
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(helmet());
 app.use(
@@ -51,6 +57,10 @@ app.use("/api/surveys", surveyRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/dashboardStats", dashboardRoutes);
 app.use("/api/roles", roleRoutes);
+app.use("/api/uploads", uploadRoutes);
+
+// Static files for uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -1,12 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Activity, FileText, FolderKanban, Users } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
 import { StatCard } from "../components/StatCard.jsx";
 import { dashboardService } from "../services/dashboardService.js";
+import { AnalysisDetails } from "../components/AnalysisDetails.jsx";
 
 export const DashboardPage = () => {
+  const { selectedProjectId } = useOutletContext();
+
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard-stats"],
-    queryFn: dashboardService.stats
+    queryKey: ["dashboard-stats", selectedProjectId],
+    queryFn: () => dashboardService.stats(selectedProjectId)
   });
 
   if (isLoading) {
@@ -81,6 +85,9 @@ export const DashboardPage = () => {
           color="brand"
         />
       </div>
+
+      {/* Advanced Analysis Details */}
+      <AnalysisDetails data={data} />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">

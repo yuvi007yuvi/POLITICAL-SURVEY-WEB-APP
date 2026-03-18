@@ -5,6 +5,9 @@ import { DataTable } from "../components/DataTable.jsx";
 import { userService } from "../services/userService.js";
 import { projectService } from "../services/projectService.js";
 import { roleService } from "../services/roleService.js";
+import { PhotoUpload } from "../components/PhotoUpload.jsx";
+import { IDCardMaker } from "../components/IDCardMaker.jsx";
+import { BadgeCheck, Contact } from "lucide-react";
 
 const roleColors = {
   super_admin: "bg-rose-50 text-rose-600 border-rose-100",
@@ -20,6 +23,7 @@ export const UsersPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [selectedUserForCard, setSelectedUserForCard] = useState(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["users", 1],
@@ -166,6 +170,18 @@ export const UsersPage = () => {
       key: "source",
       label: "SOURCE",
       render: (row) => <span className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider">{row.source || "Direct"}</span>
+    },
+    {
+      key: "idCard",
+      label: "ID CARD",
+      render: (row) => (
+        <div
+          onClick={() => setSelectedUserForCard(row)}
+          className="h-7 w-7 flex items-center justify-center bg-brand-500 text-white shadow-sm cursor-pointer hover:bg-brand-600 transition-colors"
+        >
+          <Contact size={14} />
+        </div>
+      )
     }
   ];
 
@@ -233,6 +249,26 @@ export const UsersPage = () => {
           </div>
 
           <div className="h-px bg-surface-100" />
+
+          {editingUser && (
+            <div className="flex items-center gap-6 p-4 bg-slate-50 border border-slate-100 mb-6">
+              <PhotoUpload
+                userId={editingUser._id}
+                currentPhoto={editingUser.profilePhoto}
+                onUploadSuccess={(path) => {
+                  queryClient.invalidateQueries({ queryKey: ["users"] });
+                }}
+              />
+              <div>
+                <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Identification Photo</h5>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Upload a high-resolution headshot for the ID card registry</p>
+                <div className="flex gap-2 mt-2">
+                  <span className="text-[8px] font-black px-2 py-0.5 bg-brand-50 text-brand-600 border border-brand-100 uppercase tracking-tighter">Required for credentials</span>
+                  <span className="text-[8px] font-black px-2 py-0.5 bg-slate-100 text-slate-500 uppercase tracking-tighter">Max 5MB</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
@@ -327,6 +363,13 @@ export const UsersPage = () => {
       <div className="space-y-4">
         <DataTable columns={columns} rows={data.items} />
       </div>
+
+      {selectedUserForCard && (
+        <IDCardMaker
+          user={selectedUserForCard}
+          onClose={() => setSelectedUserForCard(null)}
+        />
+      )}
     </section>
   );
 };
