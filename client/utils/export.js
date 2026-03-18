@@ -1,15 +1,14 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
-
-export const exportReportsToExcel = (rows) => {
+export const exportReportsToExcel = async (rows) => {
+  const XLSX = await import("xlsx");
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Survey Reports");
   XLSX.writeFile(workbook, "political-soch-reports.xlsx");
 };
 
-export const exportReportsToPdf = (rows) => {
+export const exportReportsToPdf = async (rows) => {
+  const { default: jsPDF } = await import("jspdf");
+  const { default: autoTable } = await import("jspdf-autotable");
   const doc = new jsPDF();
   autoTable(doc, {
     head: [["Project", "User", "Submitted At", "Latitude", "Longitude"]],
@@ -23,4 +22,3 @@ export const exportReportsToPdf = (rows) => {
   });
   doc.save("political-soch-reports.pdf");
 };
-
