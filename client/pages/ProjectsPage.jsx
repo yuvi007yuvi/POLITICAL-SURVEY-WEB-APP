@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layers3, Plus, WandSparkles } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DataTable } from "../components/DataTable.jsx";
 import { projectService } from "../services/projectService.js";
 import { userService } from "../services/userService.js";
@@ -9,6 +10,7 @@ const emptyField = { fieldId: "", label: "", type: "text", required: false, opti
 
 export const ProjectsPage = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
@@ -32,9 +34,12 @@ export const ProjectsPage = () => {
 
   const createProject = useMutation({
     mutationFn: projectService.create,
-    onSuccess: () => {
+    onSuccess: (newProject) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       resetForm();
+      if (newProject?._id) {
+        navigate(`/projects/${newProject._id}/admin`);
+      }
     }
   });
 
@@ -67,17 +72,7 @@ export const ProjectsPage = () => {
   };
 
   const handleEdit = (project) => {
-    setEditingId(project._id);
-    setForm({
-      name: project.name,
-      code: project.code,
-      description: project.description || "",
-      status: project.status,
-      formDefinition: project.formDefinition,
-      assignedUsers: project.assignedUsers.map(u => u._id || u)
-    });
-    setStep(1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(`/projects/${project._id}/admin`);
   };
 
   const nextStep = () => {
@@ -104,7 +99,7 @@ export const ProjectsPage = () => {
       label: "Project Identifier",
       render: (row) => (
         <div className="py-1">
-          <p className="font-bold text-surface-900">{row.name}</p>
+          <p className="font-bold text-surface-800">{row.name}</p>
           <p className="text-[10px] font-bold uppercase tracking-wider text-surface-300 truncate max-w-[200px]">{row.description || "No description set"}</p>
         </div>
       )
@@ -158,13 +153,13 @@ export const ProjectsPage = () => {
       {/* Top Controls/Stats */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-extrabold text-surface-900 tracking-tight">Project Orchestration</h2>
+          <h2 className="text-2xl font-extrabold text-surface-800 tracking-tight">Project Orchestration</h2>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-surface-400 mt-1">Campaign lifecycle management</p>
         </div>
         <div className="hidden md:flex items-center gap-6">
           <div className="text-right">
             <p className="text-[10px] font-bold uppercase text-surface-300 tracking-widest">Active nodes</p>
-            <p className="text-lg font-bold text-surface-900">{projects.length}</p>
+            <p className="text-lg font-bold text-surface-800">{projects.length}</p>
           </div>
           <div className="h-8 w-px bg-surface-100" />
           <div className="text-right">
@@ -178,48 +173,16 @@ export const ProjectsPage = () => {
         <div className="panel shadow-panel flex flex-col min-h-[600px] border-t-4 border-t-brand-600">
           {/* Wizard Header & Stepper */}
           <div className="mb-8">
-            <div className="flex items-start justify-between gap-4 mb-8">
+            <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-surface-900">
-                    {editingId ? "Edit Protocol" : "Project Studio"}
-                  </h3>
-                  {editingId && (
-                    <span className="badge-brand text-[9px] uppercase tracking-widest px-2 py-0.5">Edit Mode</span>
-                  )}
-                </div>
+                <h3 className="text-lg font-bold text-surface-800">Project Initializer</h3>
                 <p className="mt-1 text-[11px] font-medium text-surface-400 uppercase tracking-wider">
-                  Phase {step} of 3 • {step === 1 ? 'Protocol Identity' : step === 2 ? 'Resource Allocation' : 'Intelligence Schema'}
+                  Establish core protocol identity
                 </p>
               </div>
-              <div className="flex gap-2">
-                {editingId && (
-                  <button
-                    onClick={resetForm}
-                    className="h-12 px-4 flex items-center justify-center rounded-none bg-surface-50 text-surface-400 hover:text-surface-600 transition-colors text-[10px] font-bold uppercase tracking-widest"
-                  >
-                    Discard Edit
-                  </button>
-                )}
-                <div className="h-12 w-12 flex items-center justify-center rounded-none bg-brand-50 text-brand-600 shadow-inner">
-                  <WandSparkles size={24} />
-                </div>
+              <div className="h-12 w-12 flex items-center justify-center rounded-none bg-brand-50 text-brand-600 shadow-inner">
+                <WandSparkles size={24} />
               </div>
-            </div>
-
-            <div className="relative flex items-center justify-between px-2">
-              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-surface-100 -translate-y-1/2" />
-              {[1, 2, 3].map((s) => (
-                <div key={s} className="relative z-10 flex flex-col items-center">
-                  <div className={`h-8 w-8 rounded-none border-2 flex items-center justify-center transition-all duration-300 font-bold text-xs ${step >= s ? 'bg-brand-600 border-brand-600 text-white shadow-lg shadow-brand-500/20' : 'bg-white border-surface-200 text-surface-300'}`}>
-                    {s}
-                  </div>
-                </div>
-              ))}
-              <div
-                className="absolute top-1/2 left-0 h-0.5 bg-brand-600 -translate-y-1/2 transition-all duration-500 ease-out"
-                style={{ width: `${(step - 1) * 50}%` }}
-              />
             </div>
           </div>
 
@@ -324,46 +287,24 @@ export const ProjectsPage = () => {
 
           {/* Wizard Navigation */}
           <div className="pt-8 border-t border-surface-100 mt-auto">
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                className={`transition-all duration-300 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 ${step === 1 ? 'opacity-20 cursor-not-allowed text-surface-300' : 'text-surface-500 hover:text-brand-600'}`}
-                onClick={prevStep}
-                disabled={step === 1}
-              >
-                <Plus size={14} className="rotate-45" /> Previous Phase
-              </button>
-
-              {step < 3 ? (
-                <button
-                  type="button"
-                  className="button-primary h-11 px-8 shadow-lg shadow-brand-500/20"
-                  onClick={nextStep}
-                >
-                  Configure {step === 1 ? 'Resources' : 'Schema'}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="button-primary h-11 px-8 shadow-xl shadow-brand-600/30"
-                  onClick={() => editingId ? updateProject.mutate(form) : createProject.mutate(form)}
-                  disabled={createProject.isPending || updateProject.isPending}
-                >
-                  {createProject.isPending || updateProject.isPending ? "Synchronizing..." :
-                    editingId ? "Update Protocol" : "Initialize Campaign"}
-                </button>
-              )}
-            </div>
+            <button
+              type="button"
+              className="button-primary w-full h-12 shadow-xl shadow-brand-600/30"
+              onClick={() => createProject.mutate(form)}
+              disabled={createProject.isPending}
+            >
+              {createProject.isPending ? "Synchronizing..." : "Initialize Campaign & Configure"}
+            </button>
           </div>
         </div>
 
         {/* Existing Inventory */}
         <div className="space-y-6">
-          <div className="panel shadow-panel bg-surface-900 border-none relative overflow-hidden p-6 group">
-            <div className="absolute inset-0 opacity-20 transition-opacity group-hover:opacity-30 [background:radial-gradient(circle_at_bottom_right,var(--brand-500),transparent_70%)]" />
+          <div className="panel shadow-panel bg-brand-50 border-brand-100 relative overflow-hidden p-6 group">
+            <div className="absolute inset-0 opacity-10 transition-opacity group-hover:opacity-20 [background:radial-gradient(circle_at_bottom_right,var(--brand-500),transparent_70%)]" />
             <div className="relative z-10">
-              <h3 className="text-xl font-bold text-white tracking-tight">Intelligence Inventory</h3>
-              <p className="mt-1 text-xs font-medium text-slate-400 uppercase tracking-widest">Active Survey Protocols</p>
+              <h3 className="text-xl font-bold text-brand-700 tracking-tight">Intelligence Inventory</h3>
+              <p className="mt-1 text-xs font-medium text-brand-600/70 uppercase tracking-widest">Active Survey Protocols</p>
             </div>
           </div>
           <DataTable columns={columns} rows={projects} />

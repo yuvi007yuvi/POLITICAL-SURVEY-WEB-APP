@@ -28,16 +28,18 @@ export const DashboardPage = () => {
   return (
     <section className="space-y-6 animate-fadeIn">
       {/* Control Center Header */}
-      <div className="relative overflow-hidden rounded-none bg-surface-900 p-8 text-white shadow-2xl shadow-slate-900/10">
-        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_top_right,rgba(20,184,166,0.3),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(67,97,238,0.2),transparent_40%)]" />
+      <div className="relative overflow-hidden rounded-none bg-gradient-to-br from-emerald-50 to-emerald-100 p-8 text-surface-800 shadow-2xl shadow-emerald-900/5">
+        <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(52,211,153,0.1),transparent_40%)]" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h2 className="text-2xl font-extrabold tracking-tight">System Overview 🎯</h2>
-            <p className="mt-2 max-w-md text-sm font-medium text-slate-400 leading-relaxed">
+            <h1 className="text-xl font-extrabold tracking-tight text-surface-800">
+              Political <span className="text-brand-600">Soch</span>
+            </h1>
+            <p className="mt-2 max-w-md text-sm font-medium text-slate-600 leading-relaxed">
               Welcome back. You are viewing live metrics across all active field operations and survey programs.
             </p>
           </div>
-          <div className="flex h-16 w-16 items-center justify-center rounded-none bg-white/10 backdrop-blur-md outline outline-1 outline-white/20">
+          <div className="flex h-16 w-16 items-center justify-center rounded-none bg-white/50 backdrop-blur-md outline outline-1 outline-white/80">
             <Activity className="text-brand-400" size={32} />
           </div>
         </div>

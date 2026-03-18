@@ -1,4 +1,4 @@
-import { Eye, EyeOff, LogIn } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, LogIn, Shield } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
@@ -30,34 +30,34 @@ export const LoginPage = () => {
   return (
     <div className="flex min-h-screen bg-white font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-surface-900 items-center justify-center p-16">
+      <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-gradient-to-br from-emerald-50 to-brand-50 items-center justify-center p-16 border-r border-slate-100">
         {/* Abstract background elements */}
-        <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_top_left,var(--brand-500),transparent_70%)]" />
-        <div className="absolute inset-0 opacity-10 [background:radial-gradient(circle_at_bottom_right,var(--brand-600),transparent_50%)]" />
-        <div className="absolute inset-0 opacity-[0.03] [background-image:radial-gradient(circle,white_1px,transparent_1px)] [background-size:32px_32px]" />
+        <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_top_left,var(--brand-200),transparent_70%)]" />
+        <div className="absolute inset-0 opacity-10 [background:radial-gradient(circle_at_bottom_right,var(--brand-500),transparent_50%)]" />
+        <div className="absolute inset-0 opacity-[0.03] [background-image:radial-gradient(circle,var(--brand-600)_1px,transparent_1px)] [background-size:32px_32px]" />
 
         <div className="relative z-10 max-w-sm text-center">
-          <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-white/10 p-3 backdrop-blur-xl border border-white/10 shadow-2xl">
-            <img src="/assets/logo.png" alt="Political Soch" className="h-full w-full object-contain brightness-0 invert" />
+          <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-white p-3 shadow-xl shadow-brand-200/50 border border-brand-100">
+            <img src="/assets/logo.png" alt="Political Soch" className="h-full w-full object-contain" />
           </div>
-          <h1 className="text-4xl font-extrabold text-white tracking-tight">Political Soch</h1>
-          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.4em] text-brand-400">Intelligence Command</p>
+          <h1 className="text-4xl font-extrabold text-surface-900 tracking-tight">Political Soch</h1>
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.4em] text-brand-600">Intelligence Command</p>
 
-          <div className="mt-10 h-px w-24 mx-auto bg-white/10" />
+          <div className="mt-10 h-px w-24 mx-auto bg-brand-200" />
 
           <div className="mt-10 space-y-6">
-            <p className="text-sm font-medium leading-relaxed text-slate-400">
+            <p className="text-sm font-medium leading-relaxed text-surface-600">
               The enterprise standard for field intelligence, survey orchestration, and demographic analysis.
             </p>
             <div className="flex items-center justify-center gap-6">
               <div className="text-center">
-                <p className="text-xl font-bold text-white">2.4k+</p>
-                <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mt-1">Personnel</p>
+                <p className="text-xl font-bold text-surface-900">2.4k+</p>
+                <p className="text-[10px] font-bold uppercase text-surface-400 tracking-wider mt-1">Personnel</p>
               </div>
-              <div className="h-8 w-px bg-white/5" />
+              <div className="h-8 w-px bg-slate-200" />
               <div className="text-center">
-                <p className="text-xl font-bold text-white">99.9%</p>
-                <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mt-1">Uptime</p>
+                <p className="text-xl font-bold text-brand-600">99.9%</p>
+                <p className="text-[10px] font-bold uppercase text-surface-400 tracking-wider mt-1">Uptime</p>
               </div>
             </div>
           </div>
@@ -68,8 +68,8 @@ export const LoginPage = () => {
       <div className="flex flex-1 items-center justify-center p-8 bg-surface-50/30">
         <div className="w-full max-w-[400px]">
           <div className="flex items-center gap-3 mb-8">
-            <div className="h-10 w-10 flex items-center justify-center rounded-none bg-surface-900">
-              <Shield size={24} className="text-brand-500" />
+            <div className="h-10 w-10 flex items-center justify-center rounded-none bg-brand-50 border border-brand-100">
+              <Shield size={24} className="text-brand-600" />
             </div>
             <div>
               <h1 className="text-xl font-black text-surface-900 uppercase tracking-tighter">Political <span className="text-brand-600">Soch</span></h1>

@@ -36,9 +36,12 @@ export const getUsers = asyncHandler(async (req, res) => {
     }
   });
 });
-
 export const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password, role, phone, assignedProjects } = req.body;
+  let { name, email, password, role, phone, assignedProjects, employeeId } = req.body;
+  if (!employeeId) {
+    const count = await User.countDocuments();
+    employeeId = `NNBE${String(count + 1).padStart(5, '0')}`;
+  }
 
   // role should be an ObjectId now from the frontend
   if (!role) {
@@ -59,6 +62,8 @@ export const createUser = asyncHandler(async (req, res) => {
     password,
     role, // ObjectId
     phone: phone || "",
+    employeeId: req.body.employeeId || "",
+    source: req.body.source || "Direct",
     assignedProjects: assignedProjects || [],
     isActive: true
   });
@@ -94,6 +99,9 @@ export const updateUser = asyncHandler(async (req, res) => {
   if (phone !== undefined) user.phone = phone;
   if (assignedProjects !== undefined) user.assignedProjects = assignedProjects;
   if (isActive !== undefined) user.isActive = isActive;
+  if (req.body.employeeId !== undefined) user.employeeId = req.body.employeeId;
+  if (req.body.source !== undefined) user.source = req.body.source;
+  if (req.body.password) user.password = req.body.password;
 
   await user.save();
 

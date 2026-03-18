@@ -10,8 +10,8 @@ const DashboardPage = lazy(() =>
 const ProjectsPage = lazy(() =>
   import("./pages/ProjectsPage.jsx").then((module) => ({ default: module.ProjectsPage }))
 );
-const UsersPage = lazy(() => import("./pages/UsersPage.jsx").then((module) => ({ default: module.UsersPage })));
-const RolesPage = lazy(() => import("./pages/RolesPage.jsx").then((module) => ({ default: module.RolesPage })));
+const AdminHubPage = lazy(() => import("./pages/AdminHubPage.jsx").then((module) => ({ default: module.AdminHubPage })));
+const ProjectAdminPage = lazy(() => import("./pages/ProjectAdminPage.jsx").then((module) => ({ default: module.ProjectAdminPage })));
 const ReportsPage = lazy(() =>
   import("./pages/ReportsPage.jsx").then((module) => ({ default: module.ReportsPage }))
 );
@@ -35,8 +35,8 @@ const App = () => (
       >
         <Route index element={<DashboardPage />} />
         <Route path="projects" element={<ProjectsPage />} />
-        <Route path="users" element={<UsersPage />} />
-        <Route path="roles" element={<RolesPage />} />
+        <Route path="projects/:id/admin" element={<ProjectAdminPage />} />
+        <Route path="admin" element={<AdminHubPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="tracking" element={<MapTrackingPage />} />
       </Route>

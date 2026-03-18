@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, Plus, ShieldAlert, ShieldCheck, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, Download, Filter, Plus, Search, Shield, ShieldAlert, ShieldCheck, Trash2, UserPen, X } from "lucide-react";
 import { useState } from "react";
 import { DataTable } from "../components/DataTable.jsx";
 import { roleService } from "../services/roleService.js";
@@ -79,7 +79,7 @@ export const RolesPage = () => {
                         {row.isSystemRole ? <ShieldCheck size={18} /> : <Shield size={18} />}
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-surface-900">{row.name}</p>
+                        <p className="text-sm font-bold text-surface-800">{row.name}</p>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-surface-300">Identifier: {row.key}</p>
                     </div>
                 </div>
@@ -110,22 +110,22 @@ export const RolesPage = () => {
         },
         {
             key: "actions",
-            label: "",
+            label: "ACTIONS",
             render: (row) => (
                 !row.isSystemRole && (
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0">
-                        <button
+                    <div className="flex items-center gap-2">
+                        <div
                             onClick={() => { setEditingRole(row); setForm({ name: row.name, description: row.description, permissions: row.permissions }); setShowForm(true); }}
-                            className="rounded-none p-2 text-surface-400 hover:bg-brand-50 hover:text-brand-600 transition-colors"
+                            className="h-7 w-7 flex items-center justify-center bg-emerald-500 text-white shadow-sm cursor-pointer hover:bg-emerald-600 transition-colors"
                         >
-                            <UserPen size={15} />
-                        </button>
-                        <button
+                            <UserPen size={14} />
+                        </div>
+                        <div
                             onClick={() => { if (confirm("Delete this role registry?")) deleteMutation.mutate(row._id); }}
-                            className="rounded-none p-2 text-surface-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                            className="h-7 w-7 flex items-center justify-center bg-rose-500 text-white shadow-sm cursor-pointer hover:bg-rose-600 transition-colors"
                         >
-                            <Trash2 size={15} />
-                        </button>
+                            <Trash2 size={14} />
+                        </div>
                     </div>
                 )
             )
@@ -146,7 +146,7 @@ export const RolesPage = () => {
             {/* Access Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-extrabold text-surface-900 tracking-tight">Access Control Protocols</h2>
+                    <h2 className="text-2xl font-extrabold text-surface-800 tracking-tight">Access Control Protocols</h2>
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-400 mt-1">Role-Based Permission Matrix</p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-none bg-brand-50 text-brand-600 shadow-inner">
@@ -165,7 +165,7 @@ export const RolesPage = () => {
             {showForm && (
                 <form className="panel shadow-card animate-fadeIn space-y-6 border-t-4 border-t-brand-500" onSubmit={handleSubmit}>
                     <div>
-                        <h4 className="text-base font-bold text-surface-900">
+                        <h4 className="text-base font-bold text-surface-800">
                             {editingRole ? `Updating Protocol: ${editingRole.name}` : "Establish New Access Protocol"}
                         </h4>
                         <p className="text-[11px] font-medium text-surface-400 uppercase tracking-wider mt-1">Configure capability matrix</p>

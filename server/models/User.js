@@ -39,6 +39,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true
     },
+    employeeId: {
+      type: String,
+      default: ""
+    },
+    source: {
+      type: String,
+      default: "Direct"
+    },
     lastLoginAt: {
       type: Date
     }

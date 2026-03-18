@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Plus, ShieldCheck, UserMinus, UserPen, X } from "lucide-react";
+import { Bell, ChevronDown, Download, Filter, Layers, Plus, Search, ShieldCheck, UserMinus, UserPen, X } from "lucide-react";
 import { useState } from "react";
 import { DataTable } from "../components/DataTable.jsx";
 import { userService } from "../services/userService.js";
@@ -13,7 +13,7 @@ const roleColors = {
   surveyor: "bg-brand-50 text-brand-600 border-brand-100"
 };
 
-const emptyForm = { name: "", email: "", password: "", role: "", phone: "", assignedProjects: [] };
+const emptyForm = { name: "", email: "", password: "", role: "", phone: "", employeeId: "", source: "Direct", assignedProjects: [] };
 
 export const UsersPage = () => {
   const queryClient = useQueryClient();
@@ -63,7 +63,9 @@ export const UsersPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingUser) {
-      const { password, email, ...payload } = form;
+      const payload = { ...form };
+      if (!payload.password) delete payload.password;
+      delete payload.email;
       updateMutation.mutate({ id: editingUser._id, ...payload });
     } else {
       createMutation.mutate(form);
@@ -78,6 +80,8 @@ export const UsersPage = () => {
       password: "",
       role: user.role?._id || user.role,
       phone: user.phone || "",
+      employeeId: user.employeeId || "",
+      source: user.source || "Direct",
       assignedProjects: user.assignedProjects?.map(p => p._id || p) || []
     });
     setShowForm(true);
@@ -94,75 +98,74 @@ export const UsersPage = () => {
 
   const columns = [
     {
-      key: "name",
-      label: "Personnel",
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-none border text-[12px] font-bold uppercase shadow-sm ${roleColors[row.role?.key] || "bg-surface-50 text-surface-500 border-surface-100"}`}>
-            {row.name.charAt(0)}
-          </div>
-          <div>
-            <p className="text-sm font-bold text-surface-900">{row.name}</p>
-            <p className="text-[11px] font-medium text-surface-400">{row.email}</p>
-          </div>
-        </div>
-      )
+      key: "selection",
+      label: "",
+      render: () => <ChevronDown size={14} className="text-surface-300 -rotate-90" />
     },
     {
-      key: "role",
-      label: "Access Level",
+      key: "name",
+      label: "NAME",
+      render: (row) => <span className="text-sm font-medium text-surface-600 capitalize">{row.name}</span>
+    },
+    {
+      key: "userId",
+      label: "USERID",
+      render: (row) => <span className="text-xs text-surface-500">{row.email.split('@')[0]}</span>
+    },
+    {
+      key: "email",
+      label: "EMAIL",
+      render: (row) => <span className="text-sm text-surface-500 font-medium">{row.email}</span>
+    },
+    {
+      key: "phone",
+      label: "CONTACTNO",
+      render: (row) => <span className="text-sm text-surface-500">{row.phone || "null"}</span>
+    },
+    {
+      key: "status",
+      label: "STATUS",
       render: (row) => (
-        <span className={`badge ${roleColors[row.role?.key]?.split(' ')[1].replace('text-', 'bg-').replace('600', '100')} ${roleColors[row.role?.key]?.split(' ')[1]}`}>
-          {row.role?.name || "Member"}
+        <span className={`text-[11px] font-bold ${row.isActive ? "text-emerald-500" : "text-surface-400"}`}>
+          {row.isActive ? "Active" : "Standby"}
         </span>
       )
     },
     {
-      key: "status",
-      label: "System Status",
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-none ring-4 ring-opacity-10 ${row.isActive ? "bg-emerald-500 ring-emerald-500" : "bg-surface-300 ring-surface-300"}`} />
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${row.isActive ? "text-emerald-600" : "text-surface-400"}`}>
-            {row.isActive ? "Verified" : "Standby"}
-          </span>
+      key: "role",
+      label: "ROLE",
+      render: (row) => <span className="text-sm text-surface-600 font-medium">{row.role?.name || "10"}</span>
+    },
+    {
+      key: "employeeId",
+      label: "EMPLOYEE ID",
+      render: (row) => <span className="text-sm text-surface-500 uppercase tracking-tighter">{row.employeeId || "null"}</span>
+    },
+    {
+      key: "notify",
+      label: "NOTIFY",
+      render: () => (
+        <div className="h-7 w-7 flex items-center justify-center bg-emerald-500 text-white shadow-sm cursor-pointer hover:bg-emerald-600 transition-colors">
+          <Bell size={14} />
         </div>
       )
     },
     {
-      key: "assignedProjects",
-      label: "Assigned Units",
-      render: (row) => {
-        const codes = row.assignedProjects?.map((p) => p.code).filter(Boolean);
-        return codes?.length ? (
-          <div className="flex flex-wrap gap-1.5">
-            {codes.map((code) => (
-              <span key={code} className="badge-neutral border border-surface-200/50 bg-surface-50/50 px-2 py-0.5 text-[9px] font-bold shadow-sm">{code}</span>
-            ))}
-          </div>
-        ) : (
-          <span className="text-[10px] font-bold italic text-surface-200">No Assignments</span>
-        );
-      }
+      key: "edit",
+      label: "EDIT",
+      render: (row) => (
+        <div
+          onClick={() => startEdit(row)}
+          className="h-7 w-7 flex items-center justify-center bg-emerald-500 text-white shadow-sm cursor-pointer hover:bg-emerald-600 transition-colors"
+        >
+          <UserPen size={14} />
+        </div>
+      )
     },
     {
-      key: "actions",
-      label: "",
-      render: (row) => (
-        row.role?.key !== "super_admin" && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0">
-            <button onClick={() => startEdit(row)} className="rounded-none p-2 text-surface-400 hover:bg-brand-50 hover:text-brand-600 transition-colors">
-              <UserPen size={15} />
-            </button>
-            <button
-              onClick={() => { if (confirm("Deactivate this user?")) deactivateMutation.mutate(row._id); }}
-              className="rounded-none p-2 text-surface-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-            >
-              <UserMinus size={15} />
-            </button>
-          </div>
-        )
-      )
+      key: "source",
+      label: "SOURCE",
+      render: (row) => <span className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider">{row.source || "Direct"}</span>
     }
   ];
 
@@ -181,32 +184,49 @@ export const UsersPage = () => {
   }
 
   return (
-    <section className="space-y-6 animate-fadeIn">
-      {/* Header */}
-      <div className="panel shadow-panel flex items-center justify-between py-4">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-none bg-brand-50 text-brand-600 shadow-inner">
-            <ShieldCheck size={24} />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-surface-900">Force Registry</h3>
-            <p className="text-[11px] font-medium text-surface-400 uppercase tracking-wider">Platform Personnel Management</p>
+    <section className="space-y-4 animate-fadeIn">
+      {/* Precision Control Header */}
+      <div className="bg-white border-b border-surface-100 p-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-6">
+          <span className="text-[11px] font-bold text-surface-400 uppercase tracking-widest whitespace-nowrap">This Page : {data.meta.total}</span>
+
+          <div className="flex h-10 w-64 items-center gap-2 border border-surface-200 bg-surface-50/50 px-3">
+            <Search size={14} className="text-surface-400" />
+            <input
+              type="text"
+              placeholder="Search here Anything..."
+              className="flex-1 bg-transparent text-[12px] font-medium text-surface-600 outline-none placeholder:text-surface-300"
+            />
           </div>
         </div>
-        <button
-          className={`${showForm ? 'button-secondary' : 'button-primary'} h-10 px-6 transition-all duration-300`}
-          onClick={() => { setEditingUser(null); setForm(emptyForm); setShowForm(!showForm); }}
-        >
-          {showForm ? <X size={16} /> : <Plus size={16} />}
-          <span className="ml-2">{showForm ? "Cancel" : "Add Personnel"}</span>
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button className="flex h-10 items-center gap-2 border border-surface-200 bg-white px-4 text-[11px] font-bold text-surface-500 hover:bg-slate-50">
+            <Layers size={14} />
+            Assigne Modules
+          </button>
+          <button className="flex h-10 items-center gap-2 border border-surface-200 bg-white px-4 text-[11px] font-bold text-surface-500 hover:bg-slate-50">
+            <Download size={14} />
+            Export
+          </button>
+          <button
+            onClick={() => { setEditingUser(null); setForm(emptyForm); setShowForm(!showForm); }}
+            className="flex h-10 items-center gap-2 border border-surface-200 bg-white px-4 text-[11px] font-bold text-surface-500 hover:bg-slate-50"
+          >
+            Add +
+          </button>
+          <button className="flex h-10 items-center gap-2 border border-surface-200 bg-white px-4 text-[11px] font-bold text-surface-500 hover:bg-slate-50">
+            <Filter size={14} />
+            Filter
+          </button>
+        </div>
       </div>
 
       {/* Create/Edit Form */}
       {showForm && (
         <form className="panel shadow-card animate-fadeIn space-y-6 border-t-4 border-t-brand-500" onSubmit={handleSubmit}>
           <div>
-            <h4 className="text-base font-bold text-surface-900">
+            <h4 className="text-base font-bold text-surface-800">
               {editingUser ? `Updating Identity: ${editingUser.name}` : "Registrar New Identity"}
             </h4>
             <p className="text-[11px] font-medium text-surface-400 uppercase tracking-wider mt-1">Fill in the required credentials</p>
@@ -223,15 +243,39 @@ export const UsersPage = () => {
               <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Corporate Email</label>
               <input className="input" placeholder="john@politicalsoch.com" type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} required disabled={!!editingUser} />
             </div>
-            {!editingUser && (
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Password</label>
-                <input className="input" placeholder="••••••••" type="password" value={form.password} onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))} required minLength={6} />
-              </div>
-            )}
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">
+                {editingUser ? "New Password" : "Password"}
+                {editingUser && <span className="ml-1 normal-case font-medium text-surface-400">(Blank to keep current)</span>}
+              </label>
+              <input
+                className="input"
+                placeholder="••••••••"
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))}
+                required={!editingUser}
+                minLength={6}
+              />
+            </div>
             <div className="space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Contact Number</label>
               <input className="input" placeholder="+91 00000 00000" value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Employee ID</label>
+              <input className="input" placeholder="e.g. NNBE00017" value={form.employeeId} onChange={(e) => setForm(f => ({ ...f, employeeId: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Recruitment Source</label>
+              <div className="relative">
+                <select className="input appearance-none pr-10" value={form.source} onChange={(e) => setForm(f => ({ ...f, source: e.target.value }))}>
+                  <option value="Direct">Direct</option>
+                  <option value="Google">Google</option>
+                  <option value="otp">OTP</option>
+                </select>
+                <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Jurisdiction / Role</label>

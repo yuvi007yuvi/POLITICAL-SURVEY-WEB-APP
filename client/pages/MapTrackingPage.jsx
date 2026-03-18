@@ -62,8 +62,8 @@ export const MapTrackingPage = () => {
       </div>
 
       {/* Map */}
-      <div className="overflow-hidden rounded-[2rem] border border-surface-200/60 shadow-panel bg-white p-2">
-        <div className="rounded-[1.5rem] overflow-hidden">
+      <div className="panel bg-white p-2 border-surface-200/60 shadow-panel">
+        <div className="h-[600px] w-full">
           <SurveyMap points={points} />
         </div>
       </div>
