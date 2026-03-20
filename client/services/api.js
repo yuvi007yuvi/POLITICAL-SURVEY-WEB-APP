@@ -3,8 +3,13 @@ import axios from "axios";
 const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000/api";
 
+let finalBaseUrl = apiBaseUrl;
+if (!finalBaseUrl.includes("/api")) {
+  finalBaseUrl = finalBaseUrl.endsWith("/") ? `${finalBaseUrl}api` : `${finalBaseUrl}/api`;
+}
+
 const api = axios.create({
-  baseURL: apiBaseUrl.endsWith("/") ? apiBaseUrl : `${apiBaseUrl}/`
+  baseURL: finalBaseUrl.endsWith("/") ? finalBaseUrl : `${finalBaseUrl}/`
 });
 
 api.interceptors.request.use((config) => {
