@@ -6,8 +6,8 @@ let memoryServer;
 export const connectDatabase = async () => {
   let mongoUri = process.env.MONGODB_URI;
 
-  // Use in-memory DB if no URI is provided or if it's the default placeholder
-  if (!mongoUri || mongoUri.includes('username:password')) {
+  // Use in-memory DB if no URI is provided, if it's the default placeholder, or if explicitly set to 'memory'
+  if (!mongoUri || mongoUri.includes('username:password') || mongoUri === 'memory') {
     memoryServer = await MongoMemoryServer.create();
     mongoUri = memoryServer.getUri();
     console.log("Using In-Memory Database for local testing...");

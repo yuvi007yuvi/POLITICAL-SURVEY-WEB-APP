@@ -30,9 +30,9 @@ export const DashboardPage = () => {
   }
 
   return (
-    <section className="space-y-6 animate-fadeIn">
+    <section className="space-y-6 animate-fadeIn pb-8">
       {/* Control Center Header */}
-      <div className="relative overflow-hidden rounded-none bg-gradient-to-br from-emerald-50 to-emerald-100 p-8 text-surface-800 shadow-2xl shadow-emerald-900/5">
+      <div className="relative overflow-hidden rounded-none bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 sm:p-8 text-surface-800 shadow-2xl shadow-emerald-900/5">
         <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(52,211,153,0.1),transparent_40%)]" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -43,14 +43,14 @@ export const DashboardPage = () => {
               Welcome back. You are viewing live metrics across all active field operations and survey programs.
             </p>
           </div>
-          <div className="flex h-16 w-16 items-center justify-center rounded-none bg-white/50 backdrop-blur-md outline outline-1 outline-white/80">
-            <Activity className="text-brand-400" size={32} />
+          <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-none bg-white/50 backdrop-blur-md outline outline-1 outline-white/80 shrink-0">
+            <Activity className="text-brand-400" size={24} />
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Active Users"
           value={data.totalUsers}
@@ -86,41 +86,41 @@ export const DashboardPage = () => {
         />
       </div>
 
-      {/* Advanced Analysis Details */}
+      {/* Advanced Analysis Details - Might need its own responsiveness check internaly */}
       <AnalysisDetails data={data} />
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid gap-6 grid-cols-1 xl:grid-cols-[1fr_380px]">
         {/* Recent Submissions */}
-        <div className="panel shadow-panel">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="panel shadow-panel overflow-x-auto">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-sm font-bold text-surface-900 uppercase tracking-wider">Recent Activity</h3>
               <p className="text-[11px] font-medium text-surface-400">Latest field data captures</p>
             </div>
-            <span className="badge-brand">{data.recentSurveys.length} New Feed</span>
+            <span className="badge-brand self-start sm:self-auto">{data.recentSurveys.length} New Feed</span>
           </div>
 
-          <div className="divide-y divide-surface-100">
+          <div className="divide-y divide-surface-100 min-w-0">
             {data.recentSurveys.map((survey, index) => (
               <div
                 key={survey._id}
-                className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0 group hover:px-2 transition-all duration-200 rounded-none"
+                className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0 group hover:px-2 transition-all duration-200 rounded-none gap-4"
               >
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-surface-50 text-[12px] font-extrabold text-surface-500 group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-none bg-surface-50 text-[12px] font-extrabold text-surface-500 group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
                     {survey.userId?.name?.charAt(0) || "?"}
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-surface-800">{survey.projectId?.name}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-surface-800 truncate">{survey.projectId?.name}</p>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold text-surface-400">{survey.userId?.name}</span>
-                      <span className="h-1 w-1 rounded-none bg-surface-200" />
-                      <span className="text-[11px] font-bold text-brand-500 uppercase tracking-tighter">Verified</span>
+                      <span className="text-[11px] font-semibold text-surface-400 truncate">{survey.userId?.name}</span>
+                      <span className="hidden sm:inline h-1 w-1 rounded-none bg-surface-200" />
+                      <span className="hidden sm:inline text-[11px] font-bold text-brand-500 uppercase tracking-tighter">Verified</span>
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <p className="text-[11px] font-bold text-surface-400 tabular-nums">
                     {new Date(survey.submittedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                   </p>
@@ -178,4 +178,5 @@ export const DashboardPage = () => {
       </div>
     </section>
   );
+
 };

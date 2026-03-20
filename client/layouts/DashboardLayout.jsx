@@ -10,6 +10,7 @@ export const DashboardLayout = () => {
   const { logout, session } = useAuth();
   const location = useLocation();
   const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const { data: projects } = useQuery({
     queryKey: ["projects"],
@@ -28,17 +29,39 @@ export const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-100 p-4 lg:p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-surface-100 p-0 lg:p-6 relative overflow-x-hidden">
       {/* Background Watermark */}
       <div className="fixed inset-0 pointer-events-none flex items-center justify-center opacity-[0.06] z-0">
         <img src="/assets/logo.png" alt="Watermark" className="w-[600px]" />
       </div>
 
-      <div className="mx-auto grid max-w-[1536px] gap-6 lg:grid-cols-[280px_1fr] relative z-10">
-        <Sidebar />
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between bg-white border-b border-surface-200 px-4 py-3 sticky top-0 z-40">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 -ml-2 text-surface-500 hover:text-brand-600 transition-colors"
+          >
+            <Filter size={20} />
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/assets/logo.png" alt="Logo" className="h-6 w-6" />
+            <span className="text-sm font-black text-surface-900 uppercase tracking-tighter">Political Soch</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 bg-slate-950 flex items-center justify-center text-[10px] font-black text-white">
+            {session?.user?.name?.charAt(0) || "U"}
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto grid max-w-[1536px] gap-6 lg:grid-cols-[280px_1fr] relative z-10 p-4 lg:p-0">
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        
         <main className="space-y-6">
-          {/* Top Bar / Header */}
-          <header className="flex h-16 items-center justify-between rounded-none border border-white/40 bg-white/70 px-6 py-3 shadow-sm backdrop-blur-md">
+          {/* Desktop Header */}
+          <header className="hidden lg:flex h-16 items-center justify-between rounded-none border border-white/40 bg-white/70 px-6 py-3 shadow-sm backdrop-blur-md">
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 border-r border-surface-100 pr-6 mr-2">
                 <span className="text-brand-500 font-bold text-lg leading-none">&gt;</span>
@@ -89,7 +112,6 @@ export const DashboardLayout = () => {
             </div>
           </header>
 
-
           <div className="animate-fadeIn">
             <Outlet context={{ selectedProjectId }} />
           </div>
@@ -98,3 +120,4 @@ export const DashboardLayout = () => {
     </div>
   );
 };
+

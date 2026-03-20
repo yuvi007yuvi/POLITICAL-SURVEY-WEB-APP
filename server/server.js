@@ -29,7 +29,10 @@ const __dirname = path.dirname(__filename);
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL?.split(",") || "*"
+    origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",") : "*",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
   })
 );
 app.use(compression());
@@ -61,6 +64,15 @@ app.use("/api/uploads", uploadRoutes);
 
 // Static files for uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// --- PRODUCTION SERVING ---
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(__dirname, "../client/dist");
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 app.use(notFoundHandler);
 app.use(errorHandler);

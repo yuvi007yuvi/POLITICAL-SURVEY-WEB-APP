@@ -128,12 +128,12 @@ export const AnalysisDetails = ({ data }) => {
                         <Timer className="text-surface-200" size={18} />
                     </div>
 
-                    <div className="space-y-8 flex-1 flex flex-col justify-center">
+                    <div className="space-y-8 flex-1 flex flex-col justify-center py-4">
                         {/* Sentiment Donut */}
-                        <div className="flex items-center gap-8">
+                        <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
                             <SimpleDonut segments={insights.sentiment} size={90} />
-                            <div className="space-y-2 flex-1">
-                                <p className="text-[9px] font-bold text-surface-300 uppercase tracking-widest mb-1">Sentiment Matrix</p>
+                            <div className="space-y-2 flex-1 w-full">
+                                <p className="text-[9px] font-bold text-surface-300 uppercase tracking-widest mb-1 text-center sm:text-left">Sentiment Matrix</p>
                                 {insights.sentiment.map((s) => (
                                     <div key={s.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -147,10 +147,10 @@ export const AnalysisDetails = ({ data }) => {
                         </div>
 
                         {/* Quality Donut */}
-                        <div className="flex items-center gap-8">
+                        <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
                             <SimpleDonut segments={insights.quality} size={90} />
-                            <div className="space-y-2 flex-1">
-                                <p className="text-[9px] font-bold text-surface-300 uppercase tracking-widest mb-1">Integrity Audit</p>
+                            <div className="space-y-2 flex-1 w-full">
+                                <p className="text-[9px] font-bold text-surface-300 uppercase tracking-widest mb-1 text-center sm:text-left">Integrity Audit</p>
                                 {insights.quality.map((s) => (
                                     <div key={s.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">

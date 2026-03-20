@@ -29,7 +29,7 @@ export const LoginPage = () => {
 
   return (
     <div className="flex min-h-screen bg-white font-['Plus_Jakarta_Sans',sans-serif]">
-      {/* Left Panel */}
+      {/* Left Panel - Hidden on mobile */}
       <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-gradient-to-br from-emerald-50 to-brand-50 items-center justify-center p-16 border-r border-slate-100">
         {/* Abstract background elements */}
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_top_left,var(--brand-200),transparent_70%)]" />
@@ -64,10 +64,19 @@ export const LoginPage = () => {
         </div>
       </div>
 
-      {/* Right Form */}
-      <div className="flex flex-1 items-center justify-center p-8 bg-surface-50/30">
+      {/* Right Form - Full width on mobile */}
+      <div className="flex flex-1 items-center justify-center p-6 sm:p-8 bg-surface-50/30">
         <div className="w-full max-w-[400px]">
-          <div className="flex items-center gap-3 mb-8">
+          {/* Mobile Logo Section */}
+          <div className="lg:hidden flex flex-col items-center mb-10 text-center">
+             <div className="h-16 w-16 mb-4 flex items-center justify-center rounded-none bg-white p-2 border border-brand-100 shadow-sm">
+                <img src="/assets/logo.png" alt="Logo" className="h-full w-full object-contain" />
+             </div>
+             <h1 className="text-2xl font-black text-surface-900 uppercase tracking-tighter">Political <span className="text-brand-600">Soch</span></h1>
+             <p className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.3em] mt-1">Precision Intelligence Portal</p>
+          </div>
+
+          <div className="hidden lg:flex items-center gap-3 mb-8">
             <div className="h-10 w-10 flex items-center justify-center rounded-none bg-brand-50 border border-brand-100">
               <Shield size={24} className="text-brand-600" />
             </div>
@@ -146,7 +155,7 @@ export const LoginPage = () => {
           </form>
 
           <div className="mt-10 pt-8 border-t border-surface-100">
-            <div className="flex items-center justify-between text-[10px] font-bold text-surface-300 uppercase tracking-[0.2em]">
+            <div className="flex items-center justify-between text-[10px] font-bold text-surface-300 uppercase tracking-[0.2em] gap-4 text-center sm:text-left">
               <span>Session Encryption: AES-256</span>
               <span>v2.4.0</span>
             </div>
@@ -155,4 +164,5 @@ export const LoginPage = () => {
       </div>
     </div>
   );
+
 };
