@@ -21,7 +21,7 @@ import { connectDatabase } from "./config/db.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import seedRolesAndAdmin from "./utils/seed.js";
 
-connectDatabase();
+// connectDatabase(); // Removed redundant call
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -85,11 +85,11 @@ connectDatabase()
   .then(async () => {
     await seedRolesAndAdmin();
     app.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
+      console.log(`>>> Server listening on port ${port} in ${process.env.NODE_ENV || 'development'} mode`);
     });
   })
   .catch((error) => {
-    console.error("Server startup failed", error);
+    console.error("CRITICAL ERROR during server startup:", error);
     process.exit(1);
   });
 
