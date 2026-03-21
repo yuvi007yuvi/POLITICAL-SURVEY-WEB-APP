@@ -89,12 +89,21 @@ export const AttendancePage = () => {
         }
     }, [isCapturing, stream]);
 
+    const speak = (text) => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            window.speechSynthesis.speak(utterance);
+        }
+    };
+
     useEffect(() => {
         let animationFrame;
         let matchCount = 0;
 
         const loop = async () => {
-            if (!isCapturing || !videoRef.current || verificationStatus === "Matched") {
+            if (!isCapturing || !videoRef.current || verificationStatus === "Matched" || isVerifying) {
                 if (animationFrame) cancelAnimationFrame(animationFrame);
                 return;
             }
@@ -131,11 +140,19 @@ export const AttendancePage = () => {
 
                         if (score > 65) {
                             matchCount++;
-                            if (matchCount > 8) { // Increased for stability
+                            if (matchCount > 10) { // Increased slightly for auto-trigger safety
                                 setVerificationStatus("Matched");
-                                toast.success("Identity Verified Automatically!");
-                                // Stop drawing landmarks once matched
                                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                
+                                // Auto-trigger Attendance
+                                if (!todayStatus.hasIn) {
+                                    handleAttendance("IN");
+                                } else if (!todayStatus.hasOut) {
+                                    handleAttendance("OUT");
+                                } else {
+                                    toast.success("Identity Verified!");
+                                    speak(`${session?.user?.name || 'User'} verified successfully!`);
+                                }
                                 return; // Exit loop immediately
                             }
                         } else {
@@ -151,7 +168,7 @@ export const AttendancePage = () => {
                 console.error("Detection error:", err);
             }
 
-            if (verificationStatus !== "Matched") {
+            if (verificationStatus !== "Matched" && !isVerifying) {
                 animationFrame = requestAnimationFrame(loop);
             }
         };
@@ -164,7 +181,7 @@ export const AttendancePage = () => {
         return () => {
             if (animationFrame) cancelAnimationFrame(animationFrame);
         };
-    }, [isCapturing, verificationStatus, userDescriptor]);
+    }, [isCapturing, verificationStatus, userDescriptor, todayStatus, isVerifying]);
 
     const stopCamera = () => {
         if (videoRef.current?.srcObject) {
@@ -177,39 +194,57 @@ export const AttendancePage = () => {
 
 
     const handleAttendance = async (type) => {
-        if (verificationStatus !== "Matched") {
-            toast.error("Please verify your identity first");
-            return;
-        }
-
-        if (!currentLocation) {
-            toast.error("GPS location required");
-            return;
-        }
+        if (isVerifying) return;
+        
+        setIsVerifying(true);
+        const loadingToast = toast.loading(`${type === 'IN' ? 'Signing In' : 'Signing Out'}...`);
 
         try {
+            // 1. Get Location
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+            });
+
+            // 2. Capture Photo from Video
             const canvas = document.createElement("canvas");
             canvas.width = videoRef.current.videoWidth;
             canvas.height = videoRef.current.videoHeight;
-            canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(videoRef.current, 0, 0);
+            const photoBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+
+            // 3. Prepare Data
+            const formData = new FormData();
+            formData.append("type", type);
+            formData.append("photo", photoBlob, "attendance.jpg");
+            formData.append("latitude", position.coords.latitude);
+            formData.append("longitude", position.coords.longitude);
+
+            // 4. Submit to Backend
+            const response = await attendanceService.markAttendance(formData);
             
-            const photoBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
-            const photoFile = new File([photoBlob], "attendance.jpg", { type: "image/jpeg" });
-
-            await attendanceService.markAttendance({
-                type,
-                gpsLocation: currentLocation,
-                photo: photoFile,
-                deviceName: navigator.userAgent
-            });
-
-            toast.success(`Successfully ${type === 'IN' ? 'Checked-In' : 'Checked-Out'}`);
-            setVerificationStatus("Idle");
-            stopCamera();
-            fetchTodayStatus();
+            if (response.success) {
+                toast.success(`${type === 'IN' ? 'Checked In' : 'Checked Out'} successfully!`, { id: loadingToast });
+                
+                // Voice Feedback
+                speak(`${session?.user?.name || 'User'}, ${type === 'IN' ? 'sign in' : 'sign out'} successfully!`);
+                
+                // Finalize
+                setVerificationStatus("Matched");
+                stopCamera();
+                fetchTodayStatus();
+            }
         } catch (err) {
+            console.error(err);
             const errorMsg = err.response?.data?.message || err.message || "Failed to mark attendance";
-            toast.error(errorMsg);
+            toast.error(errorMsg, { id: loadingToast });
+            setVerificationStatus("Idle"); // Allow retry on error
+        } finally {
+            setIsVerifying(false);
         }
     };
 
