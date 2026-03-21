@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
-import jsPDF from "jsPDF";
+import jsPDF from "jspdf";
 import { Download, ShieldCheck, User, X } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 
