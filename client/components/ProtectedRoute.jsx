@@ -16,7 +16,11 @@ export const ProtectedRoute = ({ children, permission, role }) => {
   if (role && userRoleKey !== role) return <Navigate to="/" replace />;
 
   // Specific Permission Check
-  if (permission && !userPermissions.includes(permission)) return <Navigate to="/" replace />;
+  if (permission) {
+    const required = Array.isArray(permission) ? permission : [permission];
+    const hasPermission = required.some(p => userPermissions.includes(p));
+    if (!hasPermission) return <Navigate to="/" replace />;
+  }
 
   return children;
 };

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { LogOut, Filter, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Filter, LogOut, Menu, Search } from "lucide-react";
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "../components/Sidebar.jsx";
@@ -12,112 +12,112 @@ export const DashboardLayout = () => {
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const { data: projects } = useQuery({
+  const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: projectService.list
   });
 
   const getBreadcrumb = () => {
     const path = location.pathname;
-    if (path === "/") return "Dashboard";
-    if (path === "/admin") return "Administration";
+    if (path === "/") return "Overview";
+    if (path === "/admin") return "Settings";
     if (path === "/reports") return "Reports";
-    if (path === "/kpi-reports") return "KPI Dashboard";
+    if (path === "/kpi-reports") return "Analytics";
     if (path === "/tracking") return "Live Map";
-    if (path.includes("/projects")) return "Project Orchestration";
-    return "Control Center";
+    if (path.includes("/projects")) return "Project Details";
+    return "Dashboard";
   };
 
   return (
-    <div className="min-h-screen bg-surface-100 p-0 lg:p-6 relative overflow-x-hidden">
-      {/* Background Watermark */}
-      <div className="fixed inset-0 pointer-events-none flex items-center justify-center opacity-[0.06] z-0">
-        <img src="/assets/logo.png" alt="Watermark" className="w-[600px]" />
+    <div className="relative h-screen overflow-hidden bg-white flex flex-col">
+      {/* Subtle Background */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-0 top-0 h-[500px] w-full bg-gradient-to-b from-brand-50/20 to-transparent" />
+        <div className="absolute inset-0 glass-grid opacity-[0.2]" />
       </div>
 
-      {/* Mobile Header */}
-      <div className="lg:hidden flex items-center justify-between bg-white border-b border-surface-200 px-4 py-3 sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 -ml-2 text-surface-500 hover:text-brand-600 transition-colors"
-          >
-            <Filter size={20} />
-          </button>
-          <div className="flex items-center gap-2">
-            <img src="/assets/logo.png" alt="Logo" className="h-6 w-6" />
-            <span className="text-sm font-black text-surface-900 uppercase tracking-tighter">Political Soch</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-slate-950 flex items-center justify-center text-[10px] font-black text-white">
-            {session?.user?.name?.charAt(0) || "U"}
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto grid max-w-[1536px] gap-6 lg:grid-cols-[280px_1fr] relative z-10 p-4 lg:p-0">
+      <div className="flex-1 mx-auto grid w-full max-w-[1600px] gap-6 lg:grid-cols-[280px_1fr] relative z-10 overflow-hidden p-2 sm:p-4 lg:p-6">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        
-        <main className="space-y-6">
+
+        <main className="relative flex flex-col min-h-0 min-w-0 animate-fadeIn overflow-hidden">
+          {/* Mobile Header */}
+          <div className="p-4 flex lg:hidden items-center justify-between gap-4 rounded-3xl bg-slate-50 border border-slate-100 shadow-sm">
+            <button className="h-12 w-12 flex items-center justify-center rounded-2xl bg-brand-500 text-white active:scale-95 transition-all shadow-lg shadow-brand-500/20" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={20} />
+            </button>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-slate-950 font-outfit tracking-tight capitalize">{getBreadcrumb()}</p>
+            </div>
+          </div>
+
           {/* Desktop Header */}
-          <header className="hidden lg:flex h-16 items-center justify-between rounded-none border border-white/40 bg-white/70 px-6 py-3 shadow-sm backdrop-blur-md">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 border-r border-surface-100 pr-6 mr-2">
-                <span className="text-brand-500 font-bold text-lg leading-none">&gt;</span>
-                <span className="text-[14px] font-bold text-surface-500 uppercase tracking-widest">{getBreadcrumb()}</span>
+          <header className="hidden lg:block">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="h-2 w-2 rounded-full bg-brand-500" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-brand-600 font-outfit">Live Updates</p>
+                </div>
+                <h2 className="text-4xl font-bold text-slate-950 font-outfit tracking-tight leading-none">{getBreadcrumb()}</h2>
               </div>
 
-              {/* Global Project Selector */}
-              <div className="hidden md:flex items-center gap-3">
-                <div className="h-9 border border-surface-200 bg-white px-3 flex items-center gap-2 group focus-within:border-brand-500 transition-colors shadow-sm">
-                  <Filter size={12} className="text-surface-400 group-focus-within:text-brand-500 font-bold" />
+              <div className="flex flex-wrap items-center gap-4">
+
+
+                {/* Project Filter */}
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                    <Filter size={16} className="text-slate-400 group-focus-within:text-brand-500 transition-colors" />
+                  </div>
                   <select
                     value={selectedProjectId}
-                    onChange={(e) => setSelectedProjectId(e.target.value)}
-                    className="bg-transparent text-[10px] font-black uppercase tracking-widest text-surface-700 outline-none cursor-pointer pr-4 border-none focus:ring-0"
+                    onChange={(event) => setSelectedProjectId(event.target.value)}
+                    className="h-14 pl-12 pr-12 rounded-3xl border-2 border-slate-50 bg-slate-50/50 outline-none focus:border-brand-500 focus:bg-white transition-all text-sm font-bold text-slate-900 appearance-none cursor-pointer font-outfit tracking-tight"
                   >
-                    <option value="">Global Overview</option>
-                    {projects?.map((p) => (
-                      <option key={p._id} value={p._id}>{p.name}</option>
+                    <option value="">All Projects</option>
+                    {projects.map((project) => (
+                      <option key={project._id} value={project._id}>
+                        {project.name}
+                      </option>
                     ))}
                   </select>
+                  <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none">
+                    <ChevronDown size={14} className="text-slate-400" />
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 border-r border-slate-100 pr-4">
-                <div className="flex h-8 w-8 items-center justify-center bg-slate-950 text-white text-[10px] font-black overflow-hidden shadow-lg border-2 border-brand-500/20">
-                  {session?.user?.profilePhoto ? (
-                    <img src={session.user.profilePhoto} alt="User" className="h-full w-full object-cover" />
-                  ) : (
-                    session?.user?.name?.charAt(0) || "U"
-                  )}
-                </div>
-                <div className="hidden lg:block text-left">
-                   <p className="text-[10px] font-black text-slate-900 uppercase tracking-tighter leading-none">{session?.user?.name}</p>
-                   <p className="text-[8px] font-bold text-brand-600 uppercase tracking-widest mt-0.5">{session?.user?.role?.name || "Admin"}</p>
-                </div>
-              </div>
 
-              <button
-                onClick={logout}
-                className="group flex items-center gap-2.5 rounded-none px-3 py-2 text-xs font-semibold text-surface-500 hover:bg-rose-50 hover:text-rose-600 transition-all duration-200"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-none bg-surface-100 group-hover:bg-rose-100 transition-colors">
-                  <LogOut size={13} />
+                <div className="flex items-center gap-3 p-1.5 rounded-3xl bg-slate-50 border border-slate-100">
+                  <button className="h-11 w-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:text-brand-600 transition-all border border-slate-100 shadow-sm">
+                    <Bell size={18} />
+                  </button>
+                  <div className="h-8 w-px bg-slate-200" />
+                  <div className="flex items-center gap-3 pl-2 pr-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500 text-xs font-bold text-white shadow-lg shadow-brand-500/10">
+                      {session?.user?.name?.charAt(0) || "U"}
+                    </div>
+                    <div className="hidden sm:block">
+                      <p className="text-xs font-bold text-slate-950 font-outfit tracking-tight leading-none">{session?.user?.name}</p>
+                      <p className="mt-1 text-[9px] uppercase tracking-widest text-slate-400 font-bold font-outfit">
+                        {session?.user?.role?.name || "Admin"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                Logout
-              </button>
+
+                <button className="h-14 w-14 flex items-center justify-center rounded-3xl bg-white border border-slate-100 text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all shadow-sm" onClick={logout} title="Logout">
+                  <LogOut size={20} />
+                </button>
+              </div>
             </div>
           </header>
 
-          <div className="animate-fadeIn">
-            <Outlet context={{ selectedProjectId }} />
+          <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 soft-scroll mt-6 pb-10 min-w-0">
+            <div className="animate-fadeIn relative">
+              <Outlet context={{ selectedProjectId }} />
+            </div>
           </div>
         </main>
       </div>
     </div>
   );
 };
-

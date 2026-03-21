@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, ChevronDown, Download, Filter, Layers, Plus, Search, ShieldCheck, UserMinus, UserPen, X } from "lucide-react";
+import { Bell, Download, Plus, Search, UserPen, X, Contact, CheckCircle2, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { DataTable } from "../components/DataTable.jsx";
 import { userService } from "../services/userService.js";
@@ -7,14 +7,6 @@ import { projectService } from "../services/projectService.js";
 import { roleService } from "../services/roleService.js";
 import { PhotoUpload } from "../components/PhotoUpload.jsx";
 import { IDCardMaker } from "../components/IDCardMaker.jsx";
-import { BadgeCheck, Contact } from "lucide-react";
-
-const roleColors = {
-  super_admin: "bg-rose-50 text-rose-600 border-rose-100",
-  admin: "bg-violet-50 text-violet-600 border-violet-100",
-  regional_admin: "bg-blue-50 text-blue-600 border-blue-100",
-  surveyor: "bg-brand-50 text-brand-600 border-brand-100"
-};
 
 const emptyForm = { name: "", email: "", password: "", role: "", phone: "", employeeId: "", source: "Direct", assignedProjects: [] };
 
@@ -24,6 +16,9 @@ export const UsersPage = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [selectedUserForCard, setSelectedUserForCard] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [projectSearch, setProjectSearch] = useState("");
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["users", 1],
@@ -44,8 +39,13 @@ export const UsersPage = () => {
     mutationFn: userService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      setForm(emptyForm);
-      setShowForm(false);
+      resetForm();
+    },
+    onError: (err) => {
+      const msg = err.response?.data?.errors 
+        ? Object.values(err.response.data.errors).join("\n") 
+        : (err.response?.data?.message || "Failed to create user. Please check all fields.");
+      alert(msg);
     }
   });
 
@@ -53,16 +53,21 @@ export const UsersPage = () => {
     mutationFn: ({ id, ...payload }) => userService.update(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      setEditingUser(null);
-      setForm(emptyForm);
-      setShowForm(false);
+      resetForm();
+    },
+    onError: (err) => {
+      const msg = err.response?.data?.errors 
+        ? Object.values(err.response.data.errors).join("\n") 
+        : (err.response?.data?.message || "Failed to update user.");
+      alert(msg);
     }
   });
 
-  const deactivateMutation = useMutation({
-    mutationFn: userService.remove,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] })
-  });
+  const resetForm = () => {
+    setEditingUser(null);
+    setForm(emptyForm);
+    setShowForm(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -102,84 +107,67 @@ export const UsersPage = () => {
 
   const columns = [
     {
-      key: "selection",
-      label: "",
-      render: () => <ChevronDown size={14} className="text-surface-300 -rotate-90" />
-    },
-    {
       key: "name",
-      label: "NAME",
-      render: (row) => <span className="text-sm font-medium text-surface-600 capitalize">{row.name}</span>
-    },
-    {
-      key: "userId",
-      label: "USERID",
-      render: (row) => <span className="text-xs text-surface-500">{row.email.split('@')[0]}</span>
+      label: "Name",
+      render: (row) => (
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-brand-500 text-white font-bold text-xs overflow-hidden capitalize">
+             {row.profilePhoto ? (
+                <img src={row.profilePhoto} alt={row.name} className="h-full w-full object-cover" />
+             ) : row.name.charAt(0)}
+          </div>
+          <div>
+            <p className="font-bold text-slate-900 font-outfit tracking-tight leading-none">{row.name}</p>
+            <p className="mt-1.5 text-[10px] font-bold text-slate-400">
+               ID: {row.employeeId || "NEW"}
+            </p>
+          </div>
+        </div>
+      )
     },
     {
       key: "email",
-      label: "EMAIL",
-      render: (row) => <span className="text-sm text-surface-500 font-medium">{row.email}</span>
+      label: "Email Address",
+      render: (row) => <span className="text-sm font-medium text-slate-500">{row.email}</span>
     },
     {
-      key: "phone",
-      label: "CONTACTNO",
-      render: (row) => <span className="text-sm text-surface-500">{row.phone || "null"}</span>
-    },
-    {
-      key: "status",
-      label: "STATUS",
+      key: "role",
+      label: "Role",
       render: (row) => (
-        <span className={`text-[11px] font-bold ${row.isActive ? "text-emerald-500" : "text-surface-400"}`}>
-          {row.isActive ? "Active" : "Standby"}
+        <span className="inline-flex px-3 py-1 rounded-full bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border border-slate-100">
+          {row.role?.name || "Member"}
         </span>
       )
     },
     {
-      key: "role",
-      label: "ROLE",
-      render: (row) => <span className="text-sm text-surface-600 font-medium">{row.role?.name || "10"}</span>
-    },
-    {
-      key: "employeeId",
-      label: "EMPLOYEE ID",
-      render: (row) => <span className="text-sm text-surface-500 uppercase tracking-tighter">{row.employeeId || "null"}</span>
-    },
-    {
-      key: "notify",
-      label: "NOTIFY",
-      render: () => (
-        <div className="h-7 w-7 flex items-center justify-center bg-emerald-500 text-white shadow-sm cursor-pointer hover:bg-emerald-600 transition-colors">
-          <Bell size={14} />
+      key: "status",
+      label: "Status",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <div className={`h-2 w-2 rounded-full ${row.isActive ? "bg-emerald-500" : "bg-slate-300"}`} />
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${row.isActive ? "text-emerald-600" : "text-slate-400"}`}>
+            {row.isActive ? "Active" : "Away"}
+          </span>
         </div>
       )
     },
     {
-      key: "edit",
-      label: "EDIT",
+      key: "actions",
+      label: "Actions",
       render: (row) => (
-        <div
-          onClick={() => startEdit(row)}
-          className="h-7 w-7 flex items-center justify-center bg-emerald-500 text-white shadow-sm cursor-pointer hover:bg-emerald-600 transition-colors"
-        >
-          <UserPen size={14} />
-        </div>
-      )
-    },
-    {
-      key: "source",
-      label: "SOURCE",
-      render: (row) => <span className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider">{row.source || "Direct"}</span>
-    },
-    {
-      key: "idCard",
-      label: "ID CARD",
-      render: (row) => (
-        <div
-          onClick={() => setSelectedUserForCard(row)}
-          className="h-7 w-7 flex items-center justify-center bg-brand-500 text-white shadow-sm cursor-pointer hover:bg-brand-600 transition-colors"
-        >
-          <Contact size={14} />
+        <div className="flex items-center gap-2">
+            <button
+                onClick={() => startEdit(row)}
+                className="h-9 w-9 flex items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm"
+            >
+                <UserPen size={14} />
+            </button>
+            <button
+                onClick={() => setSelectedUserForCard(row)}
+                className="h-9 w-9 flex items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-amber-600 hover:border-amber-200 transition-all shadow-sm"
+            >
+                <Contact size={14} />
+            </button>
         </div>
       )
     }
@@ -187,182 +175,260 @@ export const UsersPage = () => {
 
   if (isLoading) {
     return (
-      <div className="panel shadow-panel animate-pulse space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-none bg-surface-100" />
-          <div className="space-y-2">
-            <div className="h-4 w-48 bg-surface-100 rounded-none" />
-            <div className="h-3 w-32 bg-surface-50 rounded-none" />
-          </div>
+        <div className="flex flex-col items-center justify-center p-24 gap-4 animate-pulse">
+            <div className="h-12 w-12 border-4 border-slate-100 border-t-brand-500 rounded-full animate-spin" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 font-outfit">Loading team...</p>
         </div>
-      </div>
     );
   }
 
   return (
-    <section className="space-y-4 animate-fadeIn">
-      {/* Precision Control Header */}
-      <div className="bg-white border-b border-surface-100 p-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-6">
-          <span className="text-[11px] font-bold text-surface-400 uppercase tracking-widest whitespace-nowrap">This Page : {data.meta.total}</span>
+    <section className="space-y-8 pb-12">
+      {/* Friendly Search Header */}
+      <div className="glass-panel p-6 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between border-slate-100 bg-white shadow-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-8 flex-1">
+            <div className="space-y-0.5">
+                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Team Directory</p>
+                 <p className="text-sm font-bold text-slate-900">{data.meta.total} Members listed</p>
+            </div>
 
-          <div className="flex h-10 w-64 items-center gap-2 border border-surface-200 bg-surface-50/50 px-3">
-            <Search size={14} className="text-surface-400" />
-            <input
-              type="text"
-              placeholder="Search here Anything..."
-              className="flex-1 bg-transparent text-[12px] font-medium text-surface-600 outline-none placeholder:text-surface-300"
-            />
-          </div>
+            <div className="relative flex-1 max-w-md group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <Search size={16} className="text-slate-300 group-focus-within:text-brand-500 transition-colors" />
+                </div>
+                <input
+                    type="text"
+                    placeholder="Search by name, ID or email..."
+                    className="h-12 w-full pl-11 pr-4 rounded-2xl border border-slate-100 bg-slate-50/50 outline-none focus:border-brand-500 focus:bg-white transition-all text-sm font-medium"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button className="flex h-10 items-center gap-2 border border-surface-200 bg-white px-4 text-[11px] font-bold text-surface-500 hover:bg-slate-50">
-            <Layers size={14} />
-            Assigne Modules
-          </button>
-          <button className="flex h-10 items-center gap-2 border border-surface-200 bg-white px-4 text-[11px] font-bold text-surface-500 hover:bg-slate-50">
-            <Download size={14} />
-            Export
-          </button>
-          <button
-            onClick={() => { setEditingUser(null); setForm(emptyForm); setShowForm(!showForm); }}
-            className="flex h-10 items-center gap-2 border border-surface-200 bg-white px-4 text-[11px] font-bold text-surface-500 hover:bg-slate-50"
-          >
-            Add +
-          </button>
-          <button className="flex h-10 items-center gap-2 border border-surface-200 bg-white px-4 text-[11px] font-bold text-surface-500 hover:bg-slate-50">
-            <Filter size={14} />
-            Filter
-          </button>
+        <div className="flex items-center gap-3">
+            <button
+                onClick={() => { resetForm(); setShowForm(true); }}
+                className="button-primary h-12 px-8 rounded-2xl shadow-xl shadow-brand-500/10 active:scale-95 transition-all text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+            >
+                <Plus size={18} />
+                Add Member
+            </button>
         </div>
       </div>
 
-      {/* Create/Edit Form */}
-      {showForm && (
-        <form className="panel shadow-card animate-fadeIn space-y-6 border-t-4 border-t-brand-500" onSubmit={handleSubmit}>
-          <div>
-            <h4 className="text-base font-bold text-surface-800">
-              {editingUser ? `Updating Identity: ${editingUser.name}` : "Registrar New Identity"}
-            </h4>
-            <p className="text-[11px] font-medium text-surface-400 uppercase tracking-wider mt-1">Fill in the required credentials</p>
-          </div>
-
-          <div className="h-px bg-surface-100" />
-
-          {editingUser && (
-            <div className="flex items-center gap-6 p-4 bg-slate-50 border border-slate-100 mb-6">
-              <PhotoUpload
-                userId={editingUser._id}
-                currentPhoto={editingUser.profilePhoto}
-                onUploadSuccess={(path) => {
-                  queryClient.invalidateQueries({ queryKey: ["users"] });
-                }}
-              />
-              <div>
-                <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Identification Photo</h5>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Upload a high-resolution headshot for the ID card registry</p>
-                <div className="flex gap-2 mt-2">
-                  <span className="text-[8px] font-black px-2 py-0.5 bg-brand-50 text-brand-600 border border-brand-100 uppercase tracking-tighter">Required for credentials</span>
-                  <span className="text-[8px] font-black px-2 py-0.5 bg-slate-100 text-slate-500 uppercase tracking-tighter">Max 5MB</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Legal Name</label>
-              <input className="input" placeholder="e.g. John Doe" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Corporate Email</label>
-              <input className="input" placeholder="john@politicalsoch.com" type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} required disabled={!!editingUser} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">
-                {editingUser ? "New Password" : "Password"}
-                {editingUser && <span className="ml-1 normal-case font-medium text-surface-400">(Blank to keep current)</span>}
-              </label>
-              <input
-                className="input"
-                placeholder="••••••••"
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))}
-                required={!editingUser}
-                minLength={6}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Contact Number</label>
-              <input className="input" placeholder="+91 00000 00000" value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Employee ID</label>
-              <input className="input" placeholder="e.g. NNBE00017" value={form.employeeId} onChange={(e) => setForm(f => ({ ...f, employeeId: e.target.value }))} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Recruitment Source</label>
-              <div className="relative">
-                <select className="input appearance-none pr-10" value={form.source} onChange={(e) => setForm(f => ({ ...f, source: e.target.value }))}>
-                  <option value="Direct">Direct</option>
-                  <option value="Google">Google</option>
-                  <option value="otp">OTP</option>
-                </select>
-                <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Jurisdiction / Role</label>
-              <div className="relative">
-                <select className="input appearance-none pr-10" value={form.role} onChange={(e) => setForm(f => ({ ...f, role: e.target.value }))} required>
-                  <option value="">Select Level</option>
-                  {roles.map(role => (
-                    <option key={role._id} value={role._id}>{role.name}</option>
-                  ))}
-                </select>
-                <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Operational Unit Assignment</label>
-            <div className="flex flex-wrap gap-2 rounded-none border border-dashed border-surface-200 p-5 bg-surface-50/30">
-              {projects.map((project) => {
-                const isSelected = form.assignedProjects.includes(project._id);
-                return (
-                  <button
-                    key={project._id}
-                    type="button"
-                    onClick={() => toggleProject(project._id)}
-                    className={`group flex items-center gap-2 rounded-none px-4 py-1.5 text-[11px] font-bold transition-all duration-200 ${isSelected
-                      ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
-                      : "bg-white text-surface-500 border border-surface-200 hover:border-brand-300 hover:text-brand-600 shadow-sm"
-                      }`}
-                  >
-                    <span className={`h-1.5 w-1.5 rounded-none ${isSelected ? 'bg-white' : 'bg-surface-200 group-hover:bg-brand-400'}`} />
-                    {project.code} — {project.name}
-                  </button>
-                );
-              })}
-              {projects.length === 0 && (
-                <p className="text-[11px] font-medium text-surface-400 italic">No operational units available.</p>
-              )}
-            </div>
-          </div>
-
-          <button className="button-primary w-full h-12 shadow-lg shadow-brand-500/20" type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-            {(createMutation.isPending || updateMutation.isPending) ? "Deploying..." : editingUser ? "Update Identity" : "Commit Registry"}
-          </button>
-        </form>
-      )}
-
-      {/* Table Section */}
-      <div className="space-y-4">
+      <div className="animate-fadeIn">
         <DataTable columns={columns} rows={data.items} />
       </div>
+
+      {/* Simple Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-white/20 backdrop-blur-md" onClick={() => setShowForm(false)} />
+          <div className="relative w-full max-w-2xl transform animate-slideUp">
+            <div className="bg-white overflow-hidden border border-slate-100 shadow-2xl rounded-[40px]">
+              <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-brand-600 mb-1">User Settings</p>
+                  <h3 className="text-3xl font-bold text-slate-900 font-outfit tracking-tight">
+                    {editingUser ? "Edit Member" : "Add New Member"}
+                  </h3>
+                </div>
+                <button
+                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-300 hover:text-slate-900 transition-all"
+                  onClick={() => setShowForm(false)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                {editingUser && (
+                    <div className="bg-slate-50 rounded-3xl p-6 border border-slate-50 flex items-center gap-6">
+                        <PhotoUpload
+                            userId={editingUser._id}
+                            currentPhoto={editingUser.profilePhoto}
+                            onUploadSuccess={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
+                        />
+                        <div>
+                           <h5 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-1">Profile Photo</h5>
+                           <p className="text-xs text-slate-400 font-medium">This will be used for their ID card.</p>
+                        </div>
+                    </div>
+                )}
+
+                <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-400 ml-1">Full Name</label>
+                      <input
+                        className="w-full h-12 rounded-xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-bold text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all shadow-sm"
+                        placeholder="John Doe"
+                        value={form.name}
+                        onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-400 ml-1">Email Address</label>
+                      <input
+                        className="w-full h-12 rounded-xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-bold text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all shadow-sm"
+                        placeholder="john@example.com"
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))}
+                        required
+                        disabled={!!editingUser}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-400 ml-1">Password</label>
+                      <input
+                        className="w-full h-12 rounded-xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-bold text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all shadow-sm"
+                        placeholder={editingUser ? "Leave blank to keep current" : "Min 6 characters"}
+                        type="password"
+                        value={form.password}
+                        onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))}
+                        required={!editingUser}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-400 ml-1">User Role</label>
+                      <select
+                        className="w-full h-12 rounded-xl border border-slate-100 bg-white px-5 text-[10px] font-bold uppercase tracking-widest text-slate-950 outline-none focus:border-brand-500 outline-none transition-all shadow-sm cursor-pointer"
+                        value={form.role}
+                        onChange={(e) => setForm(f => ({ ...f, role: e.target.value }))}
+                        required
+                      >
+                        <option value="">Select Role...</option>
+                        {roles.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-400 ml-1">Phone Number</label>
+                      <input
+                        className="w-full h-12 rounded-xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-bold text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all shadow-sm"
+                        placeholder="+91 00000 00000"
+                        value={form.phone}
+                        onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-400 ml-1">Employee ID</label>
+                      <input
+                        className="w-full h-12 rounded-xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-bold text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all shadow-sm"
+                        placeholder="e.g. PN-101"
+                        value={form.employeeId}
+                        onChange={(e) => setForm(f => ({ ...f, employeeId: e.target.value }))}
+                      />
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Assign Projects</p>
+                        {form.assignedProjects.length > 0 && (
+                            <button 
+                                type="button" 
+                                onClick={() => setForm(f => ({ ...f, assignedProjects: [] }))}
+                                className="text-[9px] font-bold text-rose-500 hover:text-rose-600 uppercase tracking-widest bg-rose-50 px-2 py-0.5 rounded-lg transition-colors"
+                            >
+                                Clear All
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Tags Container */}
+                    <div className="flex flex-wrap gap-2 min-h-[48px] p-2 rounded-2xl bg-slate-50/50 border border-slate-100">
+                        {form.assignedProjects.map(id => {
+                            const p = projects.find(proj => proj._id === id);
+                            if (!p) return null;
+                            return (
+                                <div key={id} className="flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-xl bg-brand-500 text-white shadow-sm animate-fadeIn">
+                                    <span className="text-[11px] font-bold font-outfit">{p.name}</span>
+                                    <button 
+                                        type="button"
+                                        onClick={() => toggleProject(id)}
+                                        className="h-5 w-5 rounded-lg bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            );
+                        })}
+                        {form.assignedProjects.length === 0 && (
+                            <p className="text-[10px] font-medium text-slate-300 italic py-2 px-2">No projects assigned yet intelligence registry...</p>
+                        )}
+                    </div>
+
+                    {/* Searchable Dropdown */}
+                    <div className="relative group/dropdown">
+                        <div className="h-14 flex items-center gap-3 px-5 rounded-2xl border border-slate-100 bg-white shadow-sm focus-within:border-brand-500 transition-all">
+                            <Search size={16} className="text-slate-300" />
+                            <input 
+                                type="text"
+                                placeholder="Search & Add Projects..."
+                                className="flex-1 bg-transparent text-sm font-bold text-slate-900 outline-none placeholder:text-slate-300"
+                                value={projectSearch}
+                                onChange={(e) => {
+                                    setProjectSearch(e.target.value);
+                                    setShowProjectDropdown(true);
+                                }}
+                                onFocus={() => setShowProjectDropdown(true)}
+                            />
+                            <ChevronDown 
+                                size={18} 
+                                className={`text-slate-300 transition-transform duration-300 ${showProjectDropdown ? "rotate-180" : ""}`} 
+                            />
+                        </div>
+
+                        {showProjectDropdown && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setShowProjectDropdown(false)} />
+                                <div className="absolute top-full left-0 right-0 mt-2 z-20 max-h-60 overflow-y-auto bg-white border border-slate-100 shadow-2xl rounded-2xl p-2 animate-fadeIn soft-scroll custom-scrollbar">
+                                    {projects
+                                        .filter(p => p.name.toLowerCase().includes(projectSearch.toLowerCase()))
+                                        .filter(p => !form.assignedProjects.includes(p._id))
+                                        .length > 0 ? (
+                                            projects
+                                                .filter(p => p.name.toLowerCase().includes(projectSearch.toLowerCase()))
+                                                .filter(p => !form.assignedProjects.includes(p._id))
+                                                .map(p => (
+                                                    <button
+                                                        key={p._id}
+                                                        type="button"
+                                                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-brand-50 text-left transition-all group"
+                                                        onClick={() => {
+                                                            toggleProject(p._id);
+                                                            setProjectSearch("");
+                                                            setShowProjectDropdown(false);
+                                                        }}
+                                                    >
+                                                        <div className="h-2 w-2 rounded-full bg-brand-500 opacity-0 group-hover:opacity-100 transition-all" />
+                                                        <span className="text-sm font-bold text-slate-700 group-hover:text-brand-700 font-outfit">{p.name}</span>
+                                                    </button>
+                                                ))
+                                        ) : (
+                                            <div className="py-8 text-center">
+                                                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No available projects found</p>
+                                            </div>
+                                        )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                <button
+                    className="button-primary h-14 w-full rounded-2xl text-[xs] font-bold uppercase tracking-widest shadow-xl shadow-brand-500/10 active:scale-95 transition-all mt-4"
+                    type="submit"
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                    {(createMutation.isPending || updateMutation.isPending) ? "Working..." : editingUser ? "Update Member" : "Save Member"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedUserForCard && (
         <IDCardMaker

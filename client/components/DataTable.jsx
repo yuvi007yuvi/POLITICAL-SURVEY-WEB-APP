@@ -1,58 +1,91 @@
-import { Inbox } from "lucide-react";
+import { Inbox, Search } from "lucide-react";
 
-export const DataTable = ({ columns, rows }) => (
-  <div className="overflow-hidden rounded-none border border-surface-200/60 bg-white shadow-panel animate-fadeIn">
-    <div className="overflow-x-auto">
-      <table className="min-w-full">
-        <thead>
-          <tr className="border-b border-surface-100 bg-surface-50/80">
-            {columns.map((column) => (
-              <th
-                key={column.key}
-                className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-surface-400"
-              >
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-surface-100/70">
-          {rows.length ? (
-            rows.map((row, index) => (
-              <tr
-                key={row.id || row._id || index}
-                className="transition-colors duration-150 hover:bg-brand-50/30"
-                style={{ animationDelay: `${index * 40}ms` }}
-              >
-                {columns.map((column) => (
-                  <td key={column.key} className="px-5 py-3.5 text-sm text-surface-600">
-                    {column.render ? column.render(row) : row[column.key]}
-                  </td>
-                ))}
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={columns.length} className="px-5 py-16 text-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-none bg-surface-100 text-surface-400">
-                    <Inbox size={24} />
-                  </div>
-                  <p className="text-sm font-medium text-surface-400">No records available yet</p>
-                  <p className="text-xs text-surface-300">Data will appear here once created</p>
-                </div>
-              </td>
+export const DataTable = ({ columns, rows = [] }) => {
+  return (
+    <div className="relative overflow-hidden rounded-[32px] border border-white bg-white/60 shadow-premium backdrop-blur-xl transition-all duration-500">
+      {/* Desktop-optimized view */}
+      <div className="hidden overflow-x-auto soft-scroll custom-scrollbar lg:block">
+        <table className="w-full text-left border-separate border-spacing-0">
+          <thead>
+            <tr className="bg-slate-50/50">
+              {columns.map((col, i) => (
+                <th
+                  key={i}
+                  className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 font-outfit border-b border-slate-100/60"
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-    {rows.length > 0 && (
-      <div className="border-t border-surface-100 bg-surface-50/50 px-5 py-2.5">
-        <p className="text-xs text-surface-400">
-          Showing <span className="font-semibold text-surface-600">{rows.length}</span> record{rows.length !== 1 ? "s" : ""}
-        </p>
+          </thead>
+          <tbody className="divide-y divide-slate-100/60">
+            {rows.length ? (
+              rows.map((row, rowIndex) => (
+                <tr
+                  key={row.id || row._id || rowIndex}
+                  className="group transition-all duration-300 hover:bg-white"
+                >
+                  {columns.map((col, colIndex) => (
+                    <td key={colIndex} className="px-8 py-6 text-sm font-bold text-slate-600 transition-all group-hover:text-slate-950">
+                      {col.render ? col.render(row) : row[col.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="px-8 py-24 text-center">
+                  <div className="flex flex-col items-center gap-6">
+                    <div className="h-20 w-20 rounded-[28px] bg-slate-50 flex items-center justify-center text-slate-200 shadow-inner">
+                      <Search size={36} strokeWidth={1.5} />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-lg font-black text-slate-950 font-outfit tracking-tight">No Records Decrypted</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Awaiting field intelligence to populate the matrix.</p>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
-    )}
-  </div>
-);
+
+      {/* Mobile-optimized view (stacked cards) */}
+      <div className="lg:hidden divide-y divide-slate-100/60">
+        {rows.length ? (
+          rows.map((row, rowIndex) => (
+            <div key={row.id || row._id || rowIndex} className="p-6 space-y-6 bg-white/40 hover:bg-white transition-all duration-300">
+              {columns.map((col, colIndex) => (
+                <div key={colIndex} className="flex flex-col gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 font-outfit leading-none">{col.label}</span>
+                  <div className="text-sm font-black text-slate-950">
+                    {col.render ? col.render(row) : row[col.key]}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))
+        ) : (
+          <div className="px-6 py-20 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[24px] bg-slate-50 text-slate-200 border border-slate-100 shadow-inner">
+              <Inbox size={28} strokeWidth={1.5} />
+            </div>
+            <p className="mt-5 text-sm font-black text-slate-950 font-outfit uppercase tracking-widest leading-relaxed px-4">Initialize protocol to sync data node.</p>
+          </div>
+        )}
+      </div>
+
+      {rows.length > 0 && (
+        <div className="border-t border-slate-100/60 bg-white/40 px-8 py-4 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+             <div className="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-outfit">
+               Telemetry Stream: <span className="text-slate-950">{rows.length} Active Nodes</span>
+             </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

@@ -15,6 +15,10 @@ const ProjectAdminPage = lazy(() => import("./pages/ProjectAdminPage.jsx").then(
 const ReportsPage = lazy(() => import("./pages/ReportsPage.jsx").then((module) => ({ default: module.ReportsPage })));
 const KpiReportsPage = lazy(() => import("./pages/KpiReportsPage.jsx").then((module) => ({ default: module.KpiReportsPage })));
 const MapTrackingPage = lazy(() => import("./pages/MapTrackingPage.jsx").then((module) => ({ default: module.MapTrackingPage })));
+const SurveySubmissionPage = lazy(() => import("./pages/SurveySubmissionPage.jsx").then((module) => ({ default: module.SurveySubmissionPage })));
+const AttendancePage = lazy(() => import("./pages/AttendancePage.jsx").then((module) => ({ default: module.AttendancePage })));
+const AttendanceHistoryPage = lazy(() => import("./pages/AttendanceHistoryPage.jsx").then((module) => ({ default: module.AttendanceHistoryPage })));
+const FaceEnrollmentPage = lazy(() => import("./pages/FaceEnrollmentPage.jsx").then((module) => ({ default: module.FaceEnrollmentPage })));
 
 import { LoadingScreen } from "./components/LoadingScreen.jsx";
 import { Toaster } from "react-hot-toast";
@@ -33,9 +37,30 @@ const App = () => (
             </ProtectedRoute>
           }
         >
-          <Route index element={<DashboardPage />} />
-          <Route path="projects" element={<ProjectsPage />} />
-          <Route path="projects/:id/admin" element={<ProjectAdminPage />} />
+          <Route 
+            index 
+            element={
+              <ProtectedRoute permission="view_dashboard">
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="projects" 
+            element={
+              <ProtectedRoute permission="manage_projects">
+                <ProjectsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="projects/:id/admin" 
+            element={
+              <ProtectedRoute permission="manage_projects">
+                <ProjectAdminPage />
+              </ProtectedRoute>
+            } 
+          />
           <Route
             path="admin/*"
             element={
@@ -44,9 +69,70 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="kpi-reports" element={<KpiReportsPage />} />
-          <Route path="tracking" element={<MapTrackingPage />} />
+          <Route 
+            path="reports" 
+            element={
+              <ProtectedRoute permission={["view_all_reports", "view_assigned_reports"]}>
+                <ReportsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="kpi-reports" 
+            element={
+              <ProtectedRoute permission="view_all_reports">
+                <KpiReportsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="tracking" 
+            element={
+              <ProtectedRoute permission={["view_all_reports", "view_assigned_reports"]}>
+                <MapTrackingPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="survey-form" 
+            element={
+              <ProtectedRoute permission="submit_surveys">
+                <SurveySubmissionPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="survey-form/:projectId" 
+            element={
+              <ProtectedRoute permission="submit_surveys">
+                <SurveySubmissionPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="attendance" 
+            element={
+              <ProtectedRoute permission="view_dashboard">
+                <AttendancePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="attendance/logs" 
+            element={
+              <ProtectedRoute permission="view_dashboard">
+                <AttendanceHistoryPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="attendance/setup" 
+            element={
+              <ProtectedRoute permission="view_dashboard">
+                <FaceEnrollmentPage />
+              </ProtectedRoute>
+            } 
+          />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

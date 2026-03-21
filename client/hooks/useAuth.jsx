@@ -28,7 +28,18 @@ export const AuthProvider = ({ children }) => {
         setSession(response.data);
         return response;
       },
-      logout: () => setSession(null)
+      logout: () => setSession(null),
+      refreshSession: async () => {
+        const response = await authService.getProfile();
+        setSession((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            user: response.data
+          };
+        });
+        return response;
+      }
     }),
     [session]
   );

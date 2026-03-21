@@ -1,13 +1,28 @@
-import { BarChart3, BarChart4, FolderKanban, Map, ScrollText, ShieldCheck, X } from "lucide-react";
+import {
+  BarChart3,
+  BarChart4,
+  FolderKanban,
+  Map,
+  ScrollText,
+  ShieldCheck,
+  X,
+  Activity,
+  UserCheck,
+  History
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
 
 const baseLinks = [
-  { to: "/", label: "Dashboard", icon: BarChart3, color: "text-teal-600 bg-teal-50" },
-  { to: "/admin", label: "Administration", icon: ShieldCheck, color: "text-indigo-600 bg-indigo-50", permission: "manage_roles" },
-  { to: "/reports", label: "Reports", icon: ScrollText, color: "text-amber-600 bg-amber-50" },
-  { to: "/kpi-reports", label: "KPI Reports", icon: BarChart4, color: "text-rose-600 bg-rose-50" },
-  { to: "/tracking", label: "Live Map", icon: Map, color: "text-sky-600 bg-sky-50" },
+  { to: "/", label: "Home", icon: BarChart3, permission: "view_dashboard" },
+  { to: "/projects", label: "Projects", icon: FolderKanban, permission: "manage_projects" },
+  { to: "/reports", label: "Reports", icon: ScrollText, permission: ["view_all_reports", "view_assigned_reports"] },
+  { to: "/kpi-reports", label: "Analytics", icon: BarChart4, permission: "view_all_reports" },
+  { to: "/tracking", label: "Map View", icon: Map, permission: ["view_all_reports", "view_assigned_reports"] },
+  { to: "/survey-form", label: "New Survey", icon: Activity, permission: "submit_surveys" },
+  { to: "/attendance", label: "Mark Attendance", icon: UserCheck, permission: "view_dashboard" },
+  { to: "/attendance/logs", label: "Attendance Logs", icon: History, permission: "view_dashboard" },
+  { to: "/admin", label: "Settings", icon: ShieldCheck, permission: "manage_roles" },
 ];
 
 export const Sidebar = ({ isOpen, onClose }) => {
@@ -15,73 +30,67 @@ export const Sidebar = ({ isOpen, onClose }) => {
   const userPermissions = session?.user?.role?.permissions || [];
   const userRoleKey = session?.user?.role?.key;
 
-  const links = baseLinks.filter(link => {
+  const links = baseLinks.filter((link) => {
     if (!link.permission) return true;
-    return userPermissions.includes(link.permission) || userRoleKey === "super_admin";
+    if (userRoleKey === "super_admin") return true;
+    
+    const required = Array.isArray(link.permission) ? link.permission : [link.permission];
+    return required.some(p => userPermissions.includes(p));
   });
 
   return (
     <>
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 lg:hidden transition-opacity duration-300"
-          onClick={onClose}
-        />
-      )}
+      {isOpen ? (
+        <div className="fixed inset-0 z-50 bg-slate-900/5 lg:hidden" onClick={onClose} />
+      ) : null}
 
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-[280px] bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:block
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        flex flex-col gap-6 border-r border-slate-200/60 p-5 shadow-2xl lg:shadow-none lg:border-none lg:rounded-none lg:h-[calc(100vh-32px)] lg:sticky lg:top-4
-      `}>
-        {/* Logo Section */}
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-none bg-brand-50 p-2 border border-brand-100">
+      <aside
+        className={`fixed inset-y-0 left-0 z-[60] flex w-[86vw] max-w-[320px] flex-col overflow-hidden p-6 transition-all duration-500 lg:sticky lg:top-8 lg:h-[calc(100vh-64px)] lg:w-full lg:max-w-none glass-panel bg-white/80 shadow-xl ${
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
+        <div className="relative flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-50 overflow-hidden">
               <img src="/assets/logo.png" alt="Logo" className="h-full w-full object-contain" />
             </div>
             <div>
-              <h1 className="text-[15px] font-extrabold tracking-tight text-surface-800">Political Soch</h1>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Command Center</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 font-outfit">Political Soch</p>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900 font-outfit">Dashboard</h1>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="lg:hidden p-2 text-surface-400 hover:text-surface-600 transition-colors"
-          >
-            <X size={20} />
+          <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-slate-900 lg:hidden border border-slate-100 transition-all" onClick={onClose}>
+            <X size={18} />
           </button>
         </div>
 
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
 
-        {/* Navigation */}
-        <nav className="flex flex-col gap-1.5 overflow-y-auto">
-          {links.map(({ to, label, icon: Icon, color }) => (
+
+        <nav className="relative flex-1 space-y-1.5 overflow-y-auto pr-2 custom-scrollbar">
+          {links.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to === "/"}
               onClick={() => {
-                if (window.innerWidth < 1024) onClose();
+                if (window.innerWidth < 1024) {
+                  onClose();
+                }
               }}
               className={({ isActive }) =>
-                `group relative flex items-center gap-3.5 rounded-none px-4 py-3 text-[13px] font-semibold transition-all duration-300 ${isActive
-                  ? "bg-brand-50 text-brand-600 border border-brand-100/50"
-                  : "text-surface-500 hover:bg-slate-50 hover:text-surface-700"
+                `group flex items-center gap-4 rounded-2xl px-4 py-3 transition-all duration-300 ${
+                  isActive
+                    ? "bg-brand-500 text-white shadow-lg shadow-brand-500/20 scale-[1.02]"
+                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon size={18} className={isActive ? "text-brand-600" : "text-surface-400 group-hover:text-surface-600"} />
-                  <span>{label}</span>
-                  {to === "/tracking" && (
-                    <span className="ml-auto flex h-1.5 w-1.5 rounded-none bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)] animate-pulse" />
-                  )}
+                  <Icon size={18} className={isActive ? "text-brand-400" : "group-hover:text-brand-500 transition-colors"} />
+                  <span className="flex-1 text-[13px] font-bold font-outfit tracking-tight">{label}</span>
                   {isActive && (
-                    <div className="absolute -left-1 h-6 w-1 rounded-none bg-brand-600" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-brand-500" />
                   )}
                 </>
               )}
@@ -89,30 +98,18 @@ export const Sidebar = ({ isOpen, onClose }) => {
           ))}
         </nav>
 
-        {/* Account Info / Footer */}
-        <div className="mt-auto space-y-4">
-          <div className="rounded-none bg-slate-50 p-4 border border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-none bg-brand-600 text-[10px] font-bold text-white shadow-inner overflow-hidden border border-brand-500/20">
-                {session?.user?.profilePhoto ? (
-                  <img src={session.user.profilePhoto} alt={session.user.name} className="h-full w-full object-cover" />
-                ) : (
-                  session?.user?.name?.charAt(0) || "A"
-                )}
+        <div className="mt-auto pt-6">
+          <div className="p-4 rounded-3xl bg-slate-50/50 border border-slate-100">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white font-bold text-xs">
+                {session?.user?.name?.charAt(0) || "U"}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-bold text-surface-800">{session?.user?.name}</p>
-                <p className="truncate text-[9px] font-medium text-surface-400 uppercase tracking-tighter">
+                <p className="truncate text-sm font-bold text-slate-900 font-outfit leading-none">{session?.user?.name}</p>
+                <p className="truncate text-[10px] font-medium text-slate-400 mt-1">
                   {session?.user?.role?.name || "Member"}
                 </p>
               </div>
-            </div>
-          </div>
-
-          <div className="px-2">
-            <div className="flex items-center justify-between text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-              <span>Powered by</span>
-              <span className="text-brand-500">v2.4.0</span>
             </div>
           </div>
         </div>
@@ -120,4 +117,3 @@ export const Sidebar = ({ isOpen, onClose }) => {
     </>
   );
 };
-

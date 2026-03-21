@@ -38,7 +38,7 @@ export const AnalysisDetails = ({ data }) => {
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                 {/* 1. Response Volatility (Collection) */}
                 <div className="panel bg-white border-surface-100 shadow-sm p-6 flex flex-col justify-between">
                     <div className="mb-6 border-b border-surface-50 pb-4">
@@ -110,60 +110,6 @@ export const AnalysisDetails = ({ data }) => {
                                 </span>
                             </div>
                         ))}
-                    </div>
-                </div>
-
-                {/* 3. Insight Clusters (Donuts) */}
-                <div className="panel bg-white border-surface-100 shadow-sm p-6 text-center lg:text-left flex flex-col">
-                    <div className="mb-6 border-b border-surface-50 pb-4 flex items-center justify-between">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <PieChart className="text-indigo-500" size={14} />
-                                <h3 className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">
-                                    Insight Clusters
-                                </h3>
-                            </div>
-                            <p className="text-xs font-bold text-surface-800">Categorical Intelligence</p>
-                        </div>
-                        <Timer className="text-surface-200" size={18} />
-                    </div>
-
-                    <div className="space-y-8 flex-1 flex flex-col justify-center py-4">
-                        {/* Sentiment Donut */}
-                        <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
-                            <SimpleDonut segments={insights.sentiment} size={90} />
-                            <div className="space-y-2 flex-1 w-full">
-                                <p className="text-[9px] font-bold text-surface-300 uppercase tracking-widest mb-1 text-center sm:text-left">Sentiment Matrix</p>
-                                {insights.sentiment.map((s) => (
-                                    <div key={s.name} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: s.color }} />
-                                            <span className="text-[10px] font-bold text-surface-500">{s.name}</span>
-                                        </div>
-                                        <span className="text-[10px] font-black text-surface-800 tabular-nums">{s.value}%</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Quality Donut */}
-                        <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
-                            <SimpleDonut segments={insights.quality} size={90} />
-                            <div className="space-y-2 flex-1 w-full">
-                                <p className="text-[9px] font-bold text-surface-300 uppercase tracking-widest mb-1 text-center sm:text-left">Integrity Audit</p>
-                                {insights.quality.map((s) => (
-                                    <div key={s.name} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: s.color }} />
-                                            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-tighter">
-                                                {s.name}
-                                            </span>
-                                        </div>
-                                        <span className="text-[10px] font-black text-surface-800 tabular-nums">{s.value}%</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

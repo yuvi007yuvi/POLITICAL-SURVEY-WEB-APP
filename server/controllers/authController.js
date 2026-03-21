@@ -10,8 +10,9 @@ const buildAuthPayload = (user) => ({
     name: user.name,
     email: user.email,
     role: user.role,
-    profilePhoto: user.profilePhoto, // Add this
-    assignedProjects: user.assignedProjects
+    profilePhoto: user.profilePhoto,
+    assignedProjects: user.assignedProjects,
+    faceDescriptor: user.faceDescriptor
   }
 });
 

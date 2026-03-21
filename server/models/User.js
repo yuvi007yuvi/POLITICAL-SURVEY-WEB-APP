@@ -53,6 +53,10 @@ const userSchema = new mongoose.Schema(
     profilePhoto: {
       type: String,
       default: ""
+    },
+    faceDescriptor: {
+      type: [Number],
+      default: undefined
     }
   },
   {

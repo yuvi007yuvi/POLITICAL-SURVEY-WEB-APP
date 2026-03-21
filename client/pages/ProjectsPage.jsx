@@ -1,25 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Layers3, Plus, WandSparkles } from "lucide-react";
+import { 
+  Plus, 
+  Search, 
+  Sparkles, 
+  Trash2, 
+  Settings, 
+  X,
+  Rocket,
+  ArrowRight
+} from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "../components/DataTable.jsx";
 import { projectService } from "../services/projectService.js";
-import { userService } from "../services/userService.js";
-
-const METRIC_TEMPLATES = [
-  { label: "Short Text", type: "text" },
-  { label: "Paragraph", type: "textarea" },
-  { label: "Dropdown", type: "select", options: [{ label: "Opt 1", value: "1" }] },
-  { label: "Single Choice", type: "radio", options: [{ label: "Yes", value: "yes" }, { label: "No", value: "no" }] },
-  { label: "Number", type: "number" },
-  { label: "Date", type: "date" },
-];
 
 export const ProjectsPage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [editingId, setEditingId] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [search, setSearch] = useState("");
   const [form, setForm] = useState({
     name: "",
     code: "",
@@ -27,11 +26,6 @@ export const ProjectsPage = () => {
     status: "draft",
     formDefinition: [],
     assignedUsers: []
-  });
-
-  const { data: allUsers, isLoading: usersLoading } = useQuery({
-    queryKey: ["users", 1],
-    queryFn: () => userService.list(1)
   });
 
   const { data: projects = [] } = useQuery({
@@ -44,27 +38,10 @@ export const ProjectsPage = () => {
     onSuccess: (newProject) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       resetForm();
+      setShowCreate(false);
       if (newProject?._id) {
         navigate(`/projects/${newProject._id}/admin`);
       }
-    },
-    onError: (error) => {
-      const serverMessage = error.response?.data?.message;
-      const clientMessage = error.message;
-      alert(`Initialization Failure: ${serverMessage || clientMessage || "No diagnostic data provided by system."}`);
-    }
-  });
-
-  const updateProject = useMutation({
-    mutationFn: (payload) => projectService.update(editingId, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      resetForm();
-    },
-    onError: (error) => {
-      const serverMessage = error.response?.data?.message;
-      const clientMessage = error.message;
-      alert(`Sync Failure: ${serverMessage || clientMessage || "Configuration update rejected by server."}`);
     }
   });
 
@@ -84,92 +61,72 @@ export const ProjectsPage = () => {
       formDefinition: [],
       assignedUsers: []
     });
-    setEditingId(null);
-    setStep(1);
   };
 
-  const addMetric = (template) => {
-    const newField = {
-      fieldId: `metric_${form.formDefinition.length + 1}_${Math.random().toString(36).substr(2, 4)}`,
-      label: template.label === "Short Text" ? "" : template.label,
-      type: template.type,
-      required: false,
-      options: template.options || []
-    };
-    setForm(f => ({ ...f, formDefinition: [...f.formDefinition, newField] }));
-  };
-
-  const handleEdit = (project) => {
-    navigate(`/projects/${project._id}/admin`);
-  };
-
-  const nextStep = () => {
-    if (step === 1 && (!form.name || !form.code)) return alert("Please establish project identity first.");
-    if (step < 3) setStep(s => s + 1);
-  };
-
-  const prevStep = () => {
-    if (step > 1) setStep(s => s - 1);
-  };
-
-  const updateField = (index, key, value) => {
-    setForm((current) => ({
-      ...current,
-      formDefinition: current.formDefinition.map((field, fieldIndex) =>
-        fieldIndex === index ? { ...field, [key]: value } : field
-      )
-    }));
-  };
+  const filteredProjects = projects.filter(p => 
+    p.name.toLowerCase().includes(search.toLowerCase()) || 
+    p.code.toLowerCase().includes(search.toLowerCase())
+  );
 
   const columns = [
     {
       key: "name",
-      label: "Project Identifier",
+      label: "Project Name",
       render: (row) => (
-        <div className="py-1">
-          <p className="font-bold text-surface-800">{row.name}</p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-surface-300 truncate max-w-[200px]">{row.description || "No description set"}</p>
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-950 font-bold text-xs font-outfit">
+            {row.code?.slice(0, 2) || "P"}
+          </div>
+          <div>
+            <p className="font-bold text-slate-900 font-outfit tracking-tight">{row.name}</p>
+            <p className="text-[10px] text-slate-400 font-medium">
+               ID: {row.code || "None"}
+            </p>
+          </div>
         </div>
       )
     },
     {
-      key: "code",
-      label: "System Code",
+      key: "status",
+      label: "Status",
       render: (row) => (
-        <span className="badge-brand font-bold tabular-nums">
-          {row.code}
-        </span>
+        <div className="flex items-center gap-2">
+          <div className={`h-2 w-2 rounded-full ${row.status === "active" ? "bg-emerald-500 animate-pulse" : "bg-amber-400"}`} />
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${row.status === "active" ? "text-emerald-600" : "text-amber-600"}`}>
+            {row.status || "Draft"}
+          </span>
+        </div>
       )
     },
     {
-      key: "status",
-      label: "Deployment",
+      key: "progress",
+      label: "Progress",
       render: (row) => (
-        <span className={`badge ${row.status === "active" ? "badge-success" :
-          row.status === "draft" ? "badge-warning" : "badge-neutral"
-          }`}>
-          {row.status}
-        </span>
+         <div className="flex items-center gap-2">
+            <div className="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
+               <div className="h-full bg-brand-500 rounded-full" style={{ width: '40%' }} />
+            </div>
+            <span className="text-[10px] font-bold text-slate-400">40%</span>
+         </div>
       )
     },
     {
       key: "actions",
-      label: "Actions",
+      label: "Manage",
       render: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => handleEdit(row)}
-            className="p-1.5 rounded-none text-surface-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
-            title="Edit Protocol"
+            onClick={() => navigate(`/projects/${row._id}/admin`)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
           >
-            <WandSparkles size={16} />
+            <Settings size={12} />
+            Setup
           </button>
           <button
-            onClick={() => confirm("Irreversible action. Delete this protocol?") && deleteProject.mutate(row._id)}
-            className="p-1.5 rounded-none text-surface-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-            title="Decommission"
+            onClick={() => confirm("Are you sure you want to delete this project?") && deleteProject.mutate(row._id)}
+            className="h-8 w-8 flex items-center justify-center rounded-xl text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all"
           >
-            <Plus size={16} className="rotate-45" />
+            <Trash2 size={14} />
           </button>
         </div>
       )
@@ -177,191 +134,115 @@ export const ProjectsPage = () => {
   ];
 
   return (
-    <section className="space-y-6 animate-fadeIn">
-      {/* Top Controls/Stats */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-extrabold text-surface-800 tracking-tight">Project Orchestration</h2>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-surface-400 mt-1">Campaign lifecycle management</p>
+    <section className="space-y-8 pb-12">
+      {/* Header & Search */}
+      <div className="glass-panel p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between bg-white/70 border-slate-100 shadow-xl">
+        <div className="space-y-1">
+           <h2 className="text-3xl font-bold text-slate-900 font-outfit tracking-tight">Projects</h2>
+           <p className="text-xs font-medium text-slate-400">View and manage all your active surveys.</p>
         </div>
-        <div className="hidden md:flex items-center gap-6">
-          <div className="text-right">
-            <p className="text-[10px] font-bold uppercase text-surface-300 tracking-widest">Active nodes</p>
-            <p className="text-lg font-bold text-surface-800">{projects.length}</p>
-          </div>
-          <div className="h-8 w-px bg-surface-100" />
-          <div className="text-right">
-            <p className="text-[10px] font-bold uppercase text-surface-300 tracking-widest">Global metrics</p>
-            <p className="text-lg font-bold text-brand-600">{projects.reduce((acc, p) => acc + p.formDefinition.length, 0)}</p>
-          </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 flex-1 max-w-xl justify-end">
+           <div className="relative flex-1 group">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <Search size={16} className="text-slate-300 group-focus-within:text-brand-500 transition-colors" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-12 w-full pl-12 pr-4 rounded-2xl border border-slate-100 bg-slate-50/50 outline-none focus:border-brand-500 focus:bg-white transition-all text-sm font-medium"
+              />
+           </div>
+
+           <button
+            className="button-primary h-12 px-6 rounded-2xl shadow-xl shadow-brand-500/10 active:scale-95 transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+            onClick={() => setShowCreate(true)}
+           >
+            <Plus size={18} />
+            New Project
+           </button>
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-        <div className="panel shadow-panel flex flex-col min-h-[600px] border-t-4 border-t-brand-600">
-          {/* Wizard Header & Stepper */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-surface-800">Project Initializer</h3>
-                <p className="mt-1 text-[11px] font-medium text-surface-400 uppercase tracking-wider">
-                  Establish core protocol identity
-                </p>
-              </div>
-              <div className="h-12 w-12 flex items-center justify-center rounded-none bg-brand-50 text-brand-600 shadow-inner">
-                <WandSparkles size={24} />
-              </div>
-            </div>
-          </div>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 ml-4">
+           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Active Map</p>
+           <div className="h-px flex-1 bg-slate-50" />
+        </div>
+        <DataTable columns={columns} rows={filteredProjects} />
+      </div>
 
-          <div className="flex-1 space-y-6">
-            {step === 1 && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="grid gap-5 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Project name</label>
-                    <input className="input h-11" placeholder="District Mapping Drive" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">System Code</label>
-                    <input className="input h-11" placeholder="PROJ-2026" value={form.code} onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Operation Scope / Narrative</label>
-                  <textarea className="input min-h-[140px] resize-none py-3" placeholder="Define the core objectives and deliverables..." value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Deployment Status</label>
-                  <select className="input h-11 appearance-none" value={form.status} onChange={(e) => setForm(f => ({ ...f, status: e.target.value }))}>
-                    <option value="draft">Draft Protocol (Confidential)</option>
-                    <option value="active">Live Deployment (Field Force Access)</option>
-                    <option value="completed">Operational Archival</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-6 animate-fadeIn">
+      {/* Basic Creation Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-white/20 backdrop-blur-md" onClick={() => setShowCreate(false)} />
+          <div className="relative w-full max-w-md animate-slideUp">
+            <div className="bg-white rounded-[40px] border border-slate-100 shadow-2xl overflow-hidden p-8 px-10">
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h4 className="text-sm font-bold text-surface-800 uppercase tracking-widest mb-1 text-center">Field Force Registry</h4>
-                  <p className="text-[11px] font-medium text-surface-400 text-center">Delegate intelligence collection to verified personnel</p>
-                </div>
-                <div className="flex flex-wrap gap-2.5 rounded-[2rem] border border-dashed border-surface-200 p-8 bg-surface-50/20 justify-center">
-                  {allUsers?.items?.map((user) => {
-                    const isSelected = form.assignedUsers?.includes(user._id);
-                    return (
-                      <button
-                        key={user._id}
-                        type="button"
-                        onClick={() => setForm(f => ({ ...f, assignedUsers: isSelected ? f.assignedUsers.filter(id => id !== user._id) : [...f.assignedUsers, user._id] }))}
-                        className={`group flex items-center gap-3 rounded-none px-5 py-2.5 text-[12px] font-bold transition-all duration-300 border ${isSelected ? "bg-brand-600 text-white border-brand-600 shadow-xl shadow-brand-500/20" : "bg-white text-surface-600 border-surface-100 hover:border-brand-200 shadow-sm"}`}
-                      >
-                        <div className={`h-2 w-2 rounded-none ${isSelected ? 'bg-white animate-pulse' : 'bg-surface-200'}`} />
-                        {user.name}
-                      </button>
-                    );
-                  })}
-                  {usersLoading && <div className="skeleton h-10 w-full rounded-none" />}
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="flex flex-col gap-4 mb-2 text-center md:text-left">
-                  <div>
-                    <h4 className="text-sm font-bold text-surface-800 uppercase tracking-widest">Rapid Metric Deployment</h4>
-                    <p className="text-[11px] font-medium text-surface-400 mt-1">Select templates to instantly build your survey schema</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles size={14} className="text-brand-500" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-600">Start Project</p>
                   </div>
-                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                    {METRIC_TEMPLATES.map(tmp => (
-                      <button
-                        key={tmp.label}
-                        type="button"
-                        onClick={() => addMetric(tmp)}
-                        className="h-8 px-3 text-[9px] font-bold border border-surface-100 bg-white hover:border-brand-500 hover:text-brand-600 transition-all uppercase tracking-widest shadow-sm flex items-center gap-2"
-                      >
-                        <Plus size={12} /> {tmp.label}
-                      </button>
-                    ))}
-                  </div>
+                  <h3 className="text-3xl font-bold text-slate-900 font-outfit tracking-tight">New Survey</h3>
                 </div>
-
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {form.formDefinition.map((field, index) => (
-                    <div key={field.fieldId} className="flex flex-col md:flex-row gap-4 p-5 rounded-none border border-surface-100 bg-white hover:border-brand-200 transition-colors relative group">
-                      <div className="flex md:flex-col items-center justify-between md:justify-center border-r border-surface-50 pr-4 md:w-12">
-                        <span className="text-lg font-black text-surface-200 group-hover:text-brand-500 transition-colors">{String(index + 1).padStart(2, '0')}</span>
-                      </div>
-
-                      <div className="grid flex-1 gap-4 md:grid-cols-2">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Label</label>
-                          <input className="input h-9 text-xs" placeholder="e.g. Respondent Age" value={field.label} onChange={e => updateField(index, "label", e.target.value)} />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Class</label>
-                          <select className="input h-9 text-xs appearance-none" value={field.type} onChange={e => updateField(index, "type", e.target.value)}>
-                            {["text", "number", "select", "date", "checkbox", "radio", "textarea"].map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Identifier</label>
-                          <input className="input h-9 text-[10px] bg-surface-50/50 font-mono" value={field.fieldId} onChange={e => updateField(index, "fieldId", e.target.value)} />
-                        </div>
-                        <div className={`space-y-1 transition-opacity duration-300 ${["select", "radio", "checkbox"].includes(field.type) ? "opacity-100" : "opacity-30"}`}>
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-surface-400">Define Choices (Comma Separated)</label>
-                          <input
-                            className="input h-9 text-xs"
-                            placeholder="e.g. Option 1, Option 2"
-                            value={field.options?.map(o => o.label).join(", ") || ""}
-                            onChange={e => updateField(index, "options", e.target.value.split(",").map(o => ({ label: o.trim(), value: o.trim() })))}
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setForm(f => ({ ...f, formDefinition: f.formDefinition.filter((_, i) => i !== index) }))}
-                        className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center bg-white border border-rose-100 text-rose-400 hover:bg-rose-500 hover:text-white hover:border-rose-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300"
-                      >
-                        <Plus size={12} className="rotate-45" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <button
+                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-300 hover:text-slate-900 transition-all"
+                  onClick={() => setShowCreate(false)}
+                >
+                  <X size={18} />
+                </button>
               </div>
-            )}
-          </div>
 
-          {/* Wizard Navigation */}
-          <div className="pt-8 border-t border-surface-100 mt-auto">
-            <button
-              type="button"
-              className="button-primary w-full h-12 shadow-xl shadow-brand-600/30"
-              onClick={() => createProject.mutate(form)}
-              disabled={createProject.isPending}
-            >
-              {createProject.isPending ? "Synchronizing..." : "Initialize Campaign & Configure"}
-            </button>
-          </div>
-        </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-slate-400 ml-1">Project Name</label>
+                  <input
+                    className="w-full h-14 rounded-2xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-bold text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all"
+                    placeholder="e.g. Village Survey"
+                    value={form.name}
+                    onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-slate-400 ml-1">System Code</label>
+                  <input
+                    className="w-full h-14 rounded-2xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-bold text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all uppercase"
+                    placeholder="VILL-01"
+                    value={form.code}
+                    onChange={(e) => setForm(p => ({ ...p, code: e.target.value.toUpperCase() }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-slate-400 ml-1">Description</label>
+                  <textarea
+                    className="w-full rounded-2xl border border-slate-100 bg-slate-50/50 p-5 text-sm font-medium text-slate-700 outline-none focus:border-brand-500 focus:bg-white transition-all"
+                    rows={3}
+                    placeholder="Briefly describe this survey..."
+                    value={form.description}
+                    onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))}
+                  />
+                </div>
 
-        {/* Existing Inventory */}
-        <div className="space-y-6">
-          <div className="panel shadow-panel bg-brand-50 border-brand-100 relative overflow-hidden p-6 group">
-            <div className="absolute inset-0 opacity-10 transition-opacity group-hover:opacity-20 [background:radial-gradient(circle_at_bottom_right,var(--brand-500),transparent_70%)]" />
-            <div className="relative z-10">
-              <h3 className="text-xl font-bold text-brand-700 tracking-tight">Intelligence Inventory</h3>
-              <p className="mt-1 text-xs font-medium text-brand-600/70 uppercase tracking-widest">Active Survey Protocols</p>
+                <button
+                  className="button-primary w-full h-14 rounded-2xl text-[xs] font-bold uppercase tracking-widest shadow-xl shadow-brand-500/10 active:scale-95 transition-all flex items-center justify-center gap-2 mt-4"
+                  onClick={() => createProject.mutate(form)}
+                  disabled={createProject.isPending}
+                >
+                  {createProject.isPending ? "Creating..." : (
+                    <>
+                       Create & Go
+                       <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-          <DataTable columns={columns} rows={projects} />
         </div>
-      </div>
+      )}
     </section>
   );
 };
-

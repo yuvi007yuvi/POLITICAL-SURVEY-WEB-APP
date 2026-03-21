@@ -11,6 +11,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",
     "axios": "^1.7.7",
+    "face-api.js": "^0.22.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",

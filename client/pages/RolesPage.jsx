@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, Download, Filter, Plus, Search, Shield, ShieldAlert, ShieldCheck, Trash2, UserPen, X } from "lucide-react";
+import { Check, Download, Plus, Shield, ShieldCheck, Trash2, UserPen, X, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { DataTable } from "../components/DataTable.jsx";
 import { roleService } from "../services/roleService.js";
@@ -31,8 +31,7 @@ export const RolesPage = () => {
         mutationFn: roleService.create,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["roles"] });
-            setForm(emptyForm);
-            setShowForm(false);
+            resetForm();
         }
     });
 
@@ -40,9 +39,7 @@ export const RolesPage = () => {
         mutationFn: ({ id, ...payload }) => roleService.update(id, payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["roles"] });
-            setEditingRole(null);
-            setForm(emptyForm);
-            setShowForm(false);
+            resetForm();
         }
     });
 
@@ -50,6 +47,12 @@ export const RolesPage = () => {
         mutationFn: roleService.remove,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles"] })
     });
+
+    const resetForm = () => {
+        setEditingRole(null);
+        setForm(emptyForm);
+        setShowForm(false);
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -72,150 +75,193 @@ export const RolesPage = () => {
     const columns = [
         {
             key: "name",
-            label: "Administrative Role",
+            label: "Role Name",
             render: (row) => (
                 <div className="flex items-center gap-4 py-1">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-none border shadow-sm ${row.isSystemRole ? "bg-brand-50 text-brand-600 border-brand-100" : "bg-surface-50 text-surface-400 border-surface-100"}`}>
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
+                        row.isSystemRole 
+                            ? "bg-brand-500 border-brand-500 text-white shadow-md" 
+                            : "bg-slate-50 border-slate-100 text-slate-300"
+                    }`}>
                         {row.isSystemRole ? <ShieldCheck size={18} /> : <Shield size={18} />}
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-surface-800">{row.name}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-surface-300">Identifier: {row.key}</p>
+                        <p className="text-sm font-bold text-slate-900 font-outfit tracking-tight">{row.name}</p>
+                        <p className="text-[10px] font-medium text-slate-400">Key: {row.key}</p>
                     </div>
                 </div>
             )
         },
         {
             key: "permissions",
-            label: "Capability Set",
+            label: "Access",
             render: (row) => (
-                <div className="flex flex-wrap gap-1.5 max-w-sm">
+                <div className="flex flex-wrap gap-1.5 max-w-md">
                     {row.permissions.map(p => (
-                        <span key={p} className="badge-neutral border border-surface-200/50 bg-surface-50/50 px-2 py-0.5 text-[9px] font-bold shadow-sm capitalize">
+                        <span key={p} className="inline-flex px-2.5 py-1 rounded-full bg-slate-50 text-[9px] font-bold text-slate-500 uppercase tracking-wider border border-slate-100">
                             {p.replace(/_/g, " ")}
                         </span>
                     ))}
-                    {row.permissions.length === 0 && <span className="text-[10px] font-bold italic text-surface-200 uppercase tracking-tight">Access restricted</span>}
+                    {row.permissions.length === 0 && (
+                        <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest">No Access</span>
+                    )}
                 </div>
             )
         },
         {
-            key: "type",
-            label: "Registry Type",
+            key: "status",
+            label: "Type",
             render: (row) => (
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${row.isSystemRole ? "text-brand-600" : "text-surface-300"}`}>
-                    {row.isSystemRole ? "Immutable" : "Mutable"}
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${row.isSystemRole ? "text-brand-600" : "text-slate-400"}`}>
+                    {row.isSystemRole ? "System" : "Custom"}
                 </span>
             )
         },
         {
             key: "actions",
-            label: "ACTIONS",
+            label: "Actions",
             render: (row) => (
-                !row.isSystemRole && (
-                    <div className="flex items-center gap-2">
-                        <div
-                            onClick={() => { setEditingRole(row); setForm({ name: row.name, description: row.description, permissions: row.permissions }); setShowForm(true); }}
-                            className="h-7 w-7 flex items-center justify-center bg-emerald-500 text-white shadow-sm cursor-pointer hover:bg-emerald-600 transition-colors"
-                        >
-                            <UserPen size={14} />
-                        </div>
-                        <div
-                            onClick={() => { if (confirm("Delete this role registry?")) deleteMutation.mutate(row._id); }}
-                            className="h-7 w-7 flex items-center justify-center bg-rose-500 text-white shadow-sm cursor-pointer hover:bg-rose-600 transition-colors"
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => { setEditingRole(row); setForm({ name: row.name, description: row.description, permissions: row.permissions }); setShowForm(true); }}
+                        className="h-9 w-9 flex items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm"
+                    >
+                        <UserPen size={14} />
+                    </button>
+                    {!row.isSystemRole && row.key !== "super_admin" && (
+                        <button
+                            onClick={() => { if (confirm("Delete this role?")) deleteMutation.mutate(row._id); }}
+                            className="h-9 w-9 flex items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-rose-600 hover:border-rose-200 transition-all shadow-sm"
                         >
                             <Trash2 size={14} />
-                        </div>
-                    </div>
-                )
+                        </button>
+                    )}
+                </div>
             )
         }
     ];
 
-    if (isLoading) return (
-        <div className="grid gap-6 lg:grid-cols-[400px_1fr]">
-            <div className="panel animate-pulse min-h-[500px]">
-                <div className="h-12 w-12 rounded-none bg-surface-100 mx-auto" />
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center p-24 gap-4 animate-pulse">
+                <div className="h-12 w-12 border-4 border-slate-100 border-t-brand-500 rounded-full animate-spin" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 font-outfit">Loading roles...</p>
             </div>
-            <div className="panel bg-surface-50/50" />
-        </div>
-    );
+        );
+    }
 
     return (
-        <section className="space-y-6 animate-fadeIn">
-            {/* Access Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-extrabold text-surface-800 tracking-tight">Access Control Protocols</h2>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-400 mt-1">Role-Based Permission Matrix</p>
+        <section className="space-y-8 animate-fadeIn">
+            {/* Header */}
+            <div className="glass-panel p-6 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between border-slate-100 bg-white shadow-xl">
+                <div className="space-y-0.5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">User Roles</p>
+                    <h3 className="text-xl font-bold text-slate-900 font-outfit tracking-tight">Manage Roles</h3>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-none bg-brand-50 text-brand-600 shadow-inner">
-                    <ShieldAlert size={24} />
+
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => { resetForm(); setShowForm(true); }}
+                        className="button-primary h-12 px-8 rounded-2xl shadow-xl shadow-brand-500/10 active:scale-95 transition-all text-[10px] font-bold tracking-widest uppercase flex items-center gap-2"
+                    >
+                        <Plus size={18} />
+                        Add Role
+                    </button>
                 </div>
             </div>
-            <button
-                className={`${showForm ? 'button-secondary' : 'button-primary'} h-10 px-6 transition-all duration-300`}
-                onClick={() => { setEditingRole(null); setForm(emptyForm); setShowForm(!showForm); }}
-            >
-                {showForm ? <X size={16} /> : <Plus size={16} />}
-                <span className="ml-2">{showForm ? "Cancel" : "Define Protocol"}</span>
-            </button>
 
-            {/* Create/Edit Form */}
+            <div className="animate-fadeIn">
+                <DataTable columns={columns} rows={roles} />
+            </div>
+
+            {/* Form Modal */}
             {showForm && (
-                <form className="panel shadow-card animate-fadeIn space-y-6 border-t-4 border-t-brand-500" onSubmit={handleSubmit}>
-                    <div>
-                        <h4 className="text-base font-bold text-surface-800">
-                            {editingRole ? `Updating Protocol: ${editingRole.name}` : "Establish New Access Protocol"}
-                        </h4>
-                        <p className="text-[11px] font-medium text-surface-400 uppercase tracking-wider mt-1">Configure capability matrix</p>
-                    </div>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-white/20 backdrop-blur-md" onClick={() => setShowForm(false)} />
+                    <div className="relative w-full max-w-4xl transform animate-slideUp">
+                        <div className="bg-white overflow-hidden border border-slate-100 shadow-2xl rounded-[40px]">
+                            <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-600 mb-1">Role Details</p>
+                                    <h3 className="text-3xl font-bold text-slate-900 font-outfit tracking-tight">
+                                        {editingRole ? "Edit Role" : "Create New Role"}
+                                    </h3>
+                                </div>
+                                <button
+                                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-300 hover:text-slate-900 transition-all"
+                                    onClick={() => setShowForm(false)}
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
 
-                    <div className="h-px bg-surface-100" />
-
-                    <div className="grid gap-5 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Protocol Name</label>
-                            <input className="input" placeholder="e.g. Intelligence Analyst" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Objective / Scope</label>
-                            <input className="input" placeholder="Describe access limitations..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-surface-500">Permission Matrix</label>
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {PERMISSIONS.map(p => {
-                                const isSelected = form.permissions.includes(p.key);
-                                return (
-                                    <div
-                                        key={p.key}
-                                        onClick={() => togglePermission(p.key)}
-                                        className={`group flex cursor-pointer items-center justify-between rounded-none border p-4 transition-all duration-200 ${isSelected
-                                            ? "bg-brand-50/50 border-brand-200 shadow-sm"
-                                            : "bg-surface-50/30 border-surface-100 hover:border-brand-200"}`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`flex h-5 w-5 items-center justify-center rounded-none border transition-colors ${isSelected ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-surface-200 group-hover:border-brand-300"}`}>
-                                                {isSelected && <Check size={12} strokeWidth={4} />}
-                                            </div>
-                                            <span className={`text-[12px] font-bold transition-colors ${isSelected ? "text-brand-900" : "text-surface-600"}`}>{p.label}</span>
-                                        </div>
+                            <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold text-slate-400 ml-1">Role Name</label>
+                                        <input
+                                            className="w-full h-12 rounded-xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-bold text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all shadow-sm"
+                                            placeholder="e.g. Supervisor"
+                                            value={form.name}
+                                            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                            required
+                                            disabled={editingRole?.isSystemRole}
+                                        />
                                     </div>
-                                );
-                            })}
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold text-slate-400 ml-1">Description</label>
+                                        <input
+                                            className="w-full h-12 rounded-xl border border-slate-100 bg-slate-50/50 px-5 text-sm font-medium text-slate-950 outline-none focus:border-brand-500 focus:bg-white transition-all shadow-sm"
+                                            placeholder="What can this role do?"
+                                            value={form.description}
+                                            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-4 px-1">
+                                      <div className="h-px flex-1 bg-slate-50" />
+                                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Choose Access Levels</p>
+                                      <div className="h-px flex-1 bg-slate-50" />
+                                    </div>
+                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                        {PERMISSIONS.map(p => {
+                                            const active = form.permissions.includes(p.key);
+                                            return (
+                                                <button
+                                                    key={p.key}
+                                                    type="button"
+                                                    onClick={() => togglePermission(p.key)}
+                                                    className={`group relative flex flex-col items-start gap-4 p-6 rounded-3xl border-2 transition-all duration-300 ${
+                                                        active ? "bg-brand-500 border-brand-500 text-white shadow-lg shadow-brand-500/10 scale-[1.02]" : "bg-white border-slate-50 text-slate-600 hover:border-brand-200"
+                                                    }`}
+                                                >
+                                                    <div className={`p-2 rounded-xl transition-colors ${active ? "bg-white/20" : "bg-slate-50 group-hover:bg-brand-50"}`}>
+                                                      <Shield size={16} className={active ? "text-white" : "text-slate-400 group-hover:text-brand-500"} />
+                                                    </div>
+                                                    <div className="flex items-center justify-between w-full">
+                                                      <span className="text-[11px] font-extrabold tracking-tight uppercase">{p.label}</span>
+                                                      {active && <CheckCircle2 size={16} className="text-white fill-white/20" />}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <button
+                                    className="button-primary h-14 w-full rounded-2xl text-[xs] font-bold uppercase tracking-widest shadow-xl shadow-brand-500/10 active:scale-95 transition-all mt-4"
+                                    type="submit"
+                                    disabled={createMutation.isPending || updateMutation.isPending}
+                                >
+                                    {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : "Save Role"}
+                                </button>
+                            </form>
                         </div>
                     </div>
-
-                    <button className="button-primary w-full h-12 shadow-lg shadow-brand-500/20" type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                        {(createMutation.isPending || updateMutation.isPending) ? "Syncing..." : editingRole ? "Update Identity" : "Commit Protocol"}
-                    </button>
-                </form>
+                </div>
             )}
-
-            <DataTable columns={columns} rows={roles} />
         </section>
     );
 };

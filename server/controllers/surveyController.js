@@ -96,6 +96,19 @@ export const getSurveyReports = asyncHandler(async (req, res) => {
     filter.userId = req.query.userId;
   }
 
+  if (req.query.date) {
+    const startOfDay = new Date(req.query.date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(req.query.date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    filter.submittedAt = {
+      $gte: startOfDay,
+      $lte: endOfDay
+    };
+  }
+
   const [items, total] = await Promise.all([
     Survey.find(filter)
       .populate("userId", "name email")

@@ -16,6 +16,10 @@ export const projectService = {
   delete: async (id) => {
     const { data } = await api.delete(`/projects/${id}`);
     return data.data;
+  },
+  get: async (id) => {
+    const { data } = await api.get(`/projects/${id}`);
+    return data.data;
   }
 };
 

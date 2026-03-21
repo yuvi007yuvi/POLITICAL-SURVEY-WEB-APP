@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Download, Filter, Search } from "lucide-react";
+import { Activity, Info, BarChart4, CheckCircle2, Clock } from "lucide-react";
 import { useMemo, useState } from "react";
 import { reportService } from "../services/reportService.js";
 
@@ -12,14 +12,17 @@ const KpiCard = ({ title, subtitle, value, color = "red" }) => {
         red: "stroke-rose-500",
         green: "stroke-emerald-500",
         purple: "stroke-violet-500",
-        blue: "stroke-sky-500"
+        blue: "stroke-brand-500"
     };
 
     return (
-        <div className="panel bg-white p-5 flex items-center justify-between border border-surface-100 shadow-sm hover:shadow-md transition-shadow group">
-            <div className="space-y-1">
-                <h4 className="text-[13px] font-bold text-surface-700 leading-tight group-hover:text-brand-600 transition-colors uppercase tracking-tight">{title}</h4>
-                <p className="text-[11px] font-medium text-surface-400">{subtitle}</p>
+        <div className="bg-white rounded-[40px] border border-slate-100 p-8 flex items-center justify-between hover:shadow-xl transition-all duration-300">
+            <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                   <div className={`h-2 w-2 rounded-full ${colors[color].replace('stroke-', 'bg-')}`} />
+                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-outfit">{title}</h4>
+                </div>
+                <p className="text-sm font-bold text-slate-900 font-outfit tracking-tight">{subtitle}</p>
             </div>
 
             <div className="relative flex items-center justify-center h-20 w-20">
@@ -30,8 +33,8 @@ const KpiCard = ({ title, subtitle, value, color = "red" }) => {
                         r={radius}
                         fill="transparent"
                         stroke="currentColor"
-                        strokeWidth="4"
-                        className="text-surface-50"
+                        strokeWidth="6"
+                        className="text-slate-50"
                     />
                     <circle
                         cx="40"
@@ -39,21 +42,21 @@ const KpiCard = ({ title, subtitle, value, color = "red" }) => {
                         r={radius}
                         fill="transparent"
                         stroke="currentColor"
-                        strokeWidth="4"
+                        strokeWidth="6"
                         strokeDasharray={circumference}
                         strokeDashoffset={strokeDashoffset}
-                        strokeLinecap="square"
+                        strokeLinecap="round"
                         className={`${colors[color]} transition-all duration-1000 ease-out`}
                     />
                 </svg>
-                <span className="absolute text-[12px] font-black text-surface-700">{value}%</span>
+                <span className="absolute text-sm font-bold text-slate-900 font-outfit">{value}%</span>
             </div>
         </div>
     );
 };
 
 export const KpiReportsPage = () => {
-    const [dates, setDates] = useState({ from: "2026-03-19", to: "2026-03-19" });
+    const [dates, setDates] = useState({ from: "2026-03-20", to: "2026-03-20" });
 
     const { data: reportsData, isLoading } = useQuery({
         queryKey: ["reports", 1],
@@ -64,84 +67,85 @@ export const KpiReportsPage = () => {
         const items = reportsData?.items || [];
         const total = items.length;
 
-        // Logic for realistic percentages based on real data
         const withGps = (items.filter(r => r.gpsLocation?.coordinates?.length).length / (total || 1)) * 100;
         const withPhotos = (items.filter(r => r.photos?.length).length / (total || 1)) * 100;
         const withVoice = (items.filter(r => r.voiceRecording?.url).length / (total || 1)) * 100;
 
         return [
-            { title: "Target Achievement", subtitle: "Overall survey goals", value: Math.min(Math.round(total * 2.5), 100), color: total > 40 ? "green" : "red" },
-            { title: "GPS Verification", subtitle: "Valid location logs", value: Math.round(withGps), color: withGps > 90 ? "green" : "purple" },
-            { title: "Media Compliance", subtitle: "Verified photographs", value: Math.round(withPhotos), color: withPhotos > 80 ? "green" : "blue" },
-            { title: "Audio Evidence", subtitle: "Voice note registry", value: Math.round(withVoice), color: withVoice > 50 ? "green" : "red" },
-            { title: "Field Force Active", subtitle: "Surveyor login status", value: 84, color: "green" },
-            { title: "Data Integrity", subtitle: "Required field logs", value: 100, color: "green" },
-            { title: "Night Operations", subtitle: "After hours polling", value: 12, color: "red" },
-            { title: "Network Uptime", subtitle: "Live sync status", value: 100, color: "green" },
-            { title: "Manual Overrides", subtitle: "System exceptions", value: 0, color: "red" },
-            { title: "Surveyor Training", subtitle: "Module completion", value: 92, color: "green" },
+            { title: "Overall Progress", subtitle: "Survey Targets", value: Math.min(Math.round(total * 2.5), 100), color: total > 40 ? "green" : "red" },
+            { title: "GPS Verification", subtitle: "Location Data", value: Math.round(withGps), color: withGps > 90 ? "green" : "purple" },
+            { title: "Photo Coverage", subtitle: "Visual Evidence", value: Math.round(withPhotos), color: withPhotos > 80 ? "green" : "blue" },
+            { title: "Voice Coverage", subtitle: "Audio Records", value: Math.round(withVoice), color: withVoice > 50 ? "green" : "red" },
+            { title: "Team Activity", subtitle: "Member Engagement", value: 84, color: "green" },
+            { title: "Verified Data", subtitle: "Valid Entries", value: 100, color: "green" },
+            { title: "Night Activity", subtitle: "Late Submissions", value: 12, color: "red" },
+            { title: "System Status", subtitle: "Sync Stability", value: 100, color: "green" },
         ];
     }, [reportsData]);
 
-    if (isLoading) return <div className="p-10 text-center font-bold text-surface-400">Synchronizing Data Nodes...</div>;
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center p-24 gap-4 animate-pulse">
+                <div className="h-12 w-12 border-4 border-slate-100 border-t-brand-500 rounded-full animate-spin" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 font-outfit">Calculating stats...</p>
+            </div>
+        );
+    }
 
     return (
-        <section className="min-h-screen bg-slate-50/30">
-            {/* Precision Header */}
-            <div className="bg-white border-b border-surface-100 p-4 sticky top-0 z-20 shadow-sm animate-slideDown">
-                <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-end gap-6">
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-bold text-surface-400 uppercase tracking-widest ml-1">From</label>
-                            <div className="h-10 border border-surface-200 px-3 flex items-center bg-surface-50">
-                                <input
-                                    type="date"
-                                    className="bg-transparent text-xs font-bold text-surface-700 outline-none"
-                                    value={dates.from}
-                                    onChange={e => setDates(d => ({ ...d, from: e.target.value }))}
-                                />
-                            </div>
-                        </div>
+        <section className="space-y-10 pb-12">
+            {/* Header */}
+            <div className="glass-panel p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between border-slate-100 bg-white shadow-xl">
+                <div className="flex items-center gap-6">
+                    <div className="h-14 w-14 flex items-center justify-center rounded-3xl bg-brand-500 text-white shadow-lg">
+                        <BarChart4 size={24} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-600 font-outfit">Performance Analytics</p>
+                        <h2 className="text-3xl font-bold text-slate-900 font-outfit tracking-tight">Key Stats</h2>
+                    </div>
+                </div>
 
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-bold text-surface-400 uppercase tracking-widest ml-1">To</label>
-                            <div className="h-10 border border-surface-200 px-3 flex items-center bg-surface-50">
-                                <input
-                                    type="date"
-                                    className="bg-transparent text-xs font-bold text-surface-700 outline-none"
-                                    value={dates.to}
-                                    onChange={e => setDates(d => ({ ...d, to: e.target.value }))}
-                                />
-                            </div>
+                <div className="flex flex-wrap items-center gap-4 p-2 bg-slate-50 border border-slate-100 rounded-3xl">
+                    <div className="flex items-center gap-4 px-6 py-2">
+                        <div className="flex flex-col">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Start Date</label>
+                            <input
+                                type="date"
+                                className="bg-transparent text-sm font-bold text-slate-900 outline-none"
+                                value={dates.from}
+                                onChange={e => setDates(d => ({ ...d, from: e.target.value }))}
+                            />
                         </div>
-
-                        <div className="flex flex-col gap-1 pt-5">
-                            <button className="h-10 px-8 bg-brand-500 text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:bg-brand-600 transition-all flex items-center gap-2">
-                                Fetch Data
-                            </button>
+                        <div className="h-8 w-px bg-slate-200" />
+                        <div className="flex flex-col">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">End Date</label>
+                            <input
+                                type="date"
+                                className="bg-transparent text-sm font-bold text-slate-900 outline-none"
+                                value={dates.to}
+                                onChange={e => setDates(d => ({ ...d, to: e.target.value }))}
+                            />
                         </div>
                     </div>
+                    <button className="h-12 px-8 bg-brand-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-[20px] hover:bg-brand-600 transition-all shadow-lg active:scale-95">
+                        Update View
+                    </button>
                 </div>
             </div>
 
-            {/* KPI Grid */}
-            <div className="max-w-[1600px] mx-auto p-6 lg:p-10">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fadeIn">
+            {/* Grid */}
+            <div className="space-y-6">
+                <div className="flex items-center gap-3 ml-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Current Performance</p>
+                    <div className="h-px flex-1 bg-slate-50" />
+                </div>
+                
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fadeIn">
                     {kpis.map((kpi, idx) => (
                         <KpiCard key={idx} {...kpi} />
                     ))}
-
-                    {/* Loading placeholders like in mockup */}
-                    <div className="panel bg-white p-5 flex items-center justify-between border border-surface-100 shadow-sm opacity-60">
-                        <div className="space-y-1">
-                            <h4 className="text-[13px] font-bold text-surface-700 uppercase tracking-tight">System Syncing...</h4>
-                            <p className="text-[11px] font-medium text-surface-400">Loading metrics...</p>
-                        </div>
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="h-12 w-12 rounded-full border-4 border-surface-100 border-t-brand-500 animate-spin" />
-                            <span className="text-[10px] font-black text-surface-300">Loading..</span>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
         </section>

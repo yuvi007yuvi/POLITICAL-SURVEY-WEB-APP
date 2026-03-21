@@ -1,6 +1,6 @@
+import "dotenv/config";
 import compression from "compression";
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -14,13 +14,14 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import attendanceRoutes from "./routes/attendanceRoutes.js";
 import surveyRoutes from "./routes/surveyRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { connectDatabase } from "./config/db.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import seedRolesAndAdmin from "./utils/seed.js";
 
-dotenv.config();
+connectDatabase();
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -57,6 +58,7 @@ app.use("/api", coreRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/surveys", surveyRoutes);
+app.use("/api/attendance", attendanceRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/dashboardStats", dashboardRoutes);
 app.use("/api/roles", roleRoutes);
